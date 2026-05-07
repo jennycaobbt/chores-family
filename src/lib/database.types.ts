@@ -56,14 +56,14 @@ export type Database = {
           chore_id: string
           completed_at: string
           id: string
-          person_id: string
+          person_id: string | null
           points_awarded: number
         }
         Insert: {
           chore_id: string
           completed_at?: string
           id?: string
-          person_id: string
+          person_id: string | null
           points_awarded: number
         }
         Update: {

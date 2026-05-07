@@ -143,7 +143,7 @@ export function ByLocation() {
         people={people}
         onPick={(personId) => {
           if (!picking) return
-          completeMut.mutate({ choreId: picking.id, personId, points: picking.points })
+          completeMut.mutate({ choreId: picking.id, personId, points: personId === null ? 0 : picking.points })
           setTimeout(() => setPicking(null), 350)
         }}
         onClose={() => setPicking(null)}

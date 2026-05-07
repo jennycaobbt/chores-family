@@ -14,6 +14,7 @@ export function ChoreCard({
   onUncomplete,
   trailing,
   dimmed,
+  completeVariant = 'icon',
 }: {
   chore: Chore
   location?: Location | null
@@ -22,6 +23,7 @@ export function ChoreCard({
   onUncomplete?: () => void
   trailing?: React.ReactNode
   dimmed?: boolean
+  completeVariant?: 'icon' | 'pill'
 }) {
   const canComplete = !!onComplete
   const canUncomplete = !!onUncomplete
@@ -37,15 +39,28 @@ export function ChoreCard({
     >
       {/* Left action button */}
       {canComplete ? (
-        <button
-          onClick={onComplete}
-          className="pop relative h-14 w-14 rounded-full shrink-0 flex items-center justify-center font-bold transition bg-gradient-to-br from-emerald-400 to-teal-500 text-white shadow-lg shadow-emerald-300/40 hover:shadow-xl active:shadow-md"
-          aria-label="Mark complete"
-        >
-          <svg viewBox="0 0 24 24" className="h-7 w-7" fill="none" stroke="currentColor" strokeWidth="3.5">
-            <path d="M5 13l4 4L19 7" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-        </button>
+        completeVariant === 'pill' ? (
+          <button
+            onClick={onComplete}
+            className="pop shrink-0 h-10 px-4 rounded-full flex items-center gap-1.5 font-bold text-sm bg-gradient-to-r from-emerald-400 to-teal-500 text-white shadow-md shadow-emerald-300/50 hover:shadow-lg hover:shadow-emerald-300/50 active:shadow-sm transition"
+            aria-label="Mark complete"
+          >
+            <svg viewBox="0 0 24 24" className="h-4 w-4 shrink-0" fill="none" stroke="currentColor" strokeWidth="3.5">
+              <path d="M5 13l4 4L19 7" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+            Complete
+          </button>
+        ) : (
+          <button
+            onClick={onComplete}
+            className="pop relative h-14 w-14 rounded-full shrink-0 flex items-center justify-center font-bold transition bg-gradient-to-br from-emerald-400 to-teal-500 text-white shadow-lg shadow-emerald-300/40 hover:shadow-xl active:shadow-md"
+            aria-label="Mark complete"
+          >
+            <svg viewBox="0 0 24 24" className="h-7 w-7" fill="none" stroke="currentColor" strokeWidth="3.5">
+              <path d="M5 13l4 4L19 7" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </button>
+        )
       ) : canUncomplete ? (
         <button
           onClick={onUncomplete}

@@ -75,7 +75,7 @@ export function useCompleteChore() {
   return useMutation({
     mutationFn: async (input: {
       choreId: string
-      personId: string
+      personId: string | null
       points: number
     }): Promise<Completion> => {
       const { data, error } = await supabase
@@ -83,7 +83,7 @@ export function useCompleteChore() {
         .insert({
           chore_id: input.choreId,
           person_id: input.personId,
-          points_awarded: input.points,
+          points_awarded: input.personId === null ? 0 : input.points,
         })
         .select()
         .single()

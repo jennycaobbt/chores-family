@@ -150,6 +150,7 @@ export function Dashboard() {
                 location={c.location_id ? locationsById[c.location_id] : null}
                 defaultPerson={c.default_person_id ? peopleById[c.default_person_id] : null}
                 onComplete={() => setPicking(c)}
+                completeVariant="pill"
               />
             ))}
           </AnimatePresence>
@@ -202,7 +203,7 @@ export function Dashboard() {
           if (!picking) return
           const { id: choreId, points, name: choreName } = picking
           completeMut.mutate(
-            { choreId, personId, points },
+            { choreId, personId, points: personId === null ? 0 : points },
             {
               onSuccess: (completion) => {
                 setUndoState({ completionId: completion.id, choreName })

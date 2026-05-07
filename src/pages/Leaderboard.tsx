@@ -45,6 +45,7 @@ export function Leaderboard() {
   const ranked = useMemo(() => {
     const totals = new Map<string, { points: number; count: number }>()
     for (const c of filtered) {
+      if (!c.person_id) continue
       const cur = totals.get(c.person_id) ?? { points: 0, count: 0 }
       cur.points += c.points_awarded
       cur.count += 1
