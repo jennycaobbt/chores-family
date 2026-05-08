@@ -90,10 +90,8 @@ export function useCompleteChore() {
       if (error) throw error
       return data
     },
-    onSuccess: (newCompletion) => {
-      // Update cache immediately so the card moves to "done" without a round-trip refetch
-      qc.setQueryData<Completion[]>(KEY.completions, (old = []) => [newCompletion, ...old])
-    },
+    // No cache side-effects here — each page decides when to commit the completion
+    // to the cache (after the confetti animation finishes) via setQueryData in onDone.
   })
 }
 

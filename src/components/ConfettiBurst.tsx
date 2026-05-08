@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from 'framer-motion'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 const COLORS = ['#7c3aed', '#6366f1', '#f59e0b', '#10b981', '#ec4899', '#f97316', '#3b82f6']
 
@@ -38,15 +38,18 @@ interface Props {
 
 export function ConfettiBurst({ active, onDone }: Props) {
   const [particles, setParticles] = useState<Particle[]>([])
+  // Keep a stable ref so the timeout doesn't get cancelled by re-renders
+  const onDoneRef = useRef(onDone)
+  onDoneRef.current = onDone
 
   // Generate a fresh random burst every time it becomes active
   useEffect(() => {
     if (active) {
       setParticles(makeParticles(28))
-      const t = setTimeout(onDone, 1100)
+      const t = setTimeout(() => onDoneRef.current(), 1100)
       return () => clearTimeout(t)
     }
-  }, [active, onDone])
+  }, [active]) // intentionally omit onDone — we use the ref instead
 
   return (
     <AnimatePresence>

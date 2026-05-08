@@ -1,6 +1,7 @@
 import { useMemo, useState, useCallback } from 'react'
 import { AnimatePresence } from 'framer-motion'
 import { Sparkles, PartyPopper, ChevronDown, ChevronUp } from 'lucide-react'
+import { useQueryClient } from '@tanstack/react-query'
 import { ChoreCard } from '../components/ChoreCard'
 import { WhoDidItModal } from '../components/WhoDidItModal'
 import { UndoToast } from '../components/UndoToast'
@@ -33,6 +34,7 @@ function latestInPeriod(
 }
 
 export function Dashboard() {
+  const qc = useQueryClient()
   const { data: people = [] } = usePeople()
   const { data: locations = [] } = useLocations()
   const { data: chores = [] } = useChores()
@@ -44,6 +46,8 @@ export function Dashboard() {
   const [undoState, setUndoState] = useState<UndoState | null>(null)
   const [showDone, setShowDone] = useState(false)
   const [celebrating, setCelebrating] = useState(false)
+  // Holds the completion returned by the server, waiting for confetti to finish
+  const [pendingCompletion, setPendingCompletion] = useState<Completion | null>(null)
 
   const peopleById = useMemo(() => Object.fromEntries(people.map((p) => [p.id, p])), [people])
   const locationsById = useMemo(
@@ -110,6 +114,15 @@ export function Dashboard() {
     },
     [completionsByChore, now, undoMut],
   )
+
+  // Called when the confetti animation finishes — flush the pending completion into the cache
+  const handleConfettiDone = useCallback(() => {
+    setCelebrating(false)
+    if (pendingCompletion) {
+      qc.setQueryData<Completion[]>(['completions'], (old = []) => [pendingCompletion, ...old])
+      setPendingCompletion(null)
+    }
+  }, [pendingCompletion, qc])
 
   return (
     <div className="max-w-3xl mx-auto px-4 pt-6 pb-8">
@@ -198,9 +211,9 @@ export function Dashboard() {
         </div>
       )}
 
-      {/* Who did it modal */}
-      <ConfettiBurst active={celebrating} onDone={() => setCelebrating(false)} />
+      <ConfettiBurst active={celebrating} onDone={handleConfettiDone} />
 
+      {/* Who did it modal */}
       <WhoDidItModal
         chore={picking}
         people={people}
@@ -213,7 +226,14 @@ export function Dashboard() {
               onSuccess: (completion) => {
                 setPicking(null)
                 setUndoState({ completionId: completion.id, choreName })
-                if (personId !== null) setCelebrating(true)
+                if (personId !== null) {
+                  // Hold the completion until confetti finishes, then move the card
+                  setPendingCompletion(completion)
+                  setCelebrating(true)
+                } else {
+                  // "Other" — no confetti, move card immediately
+                  qc.setQueryData<Completion[]>(['completions'], (old = []) => [completion, ...old])
+                }
               },
             },
           )
