@@ -15,6 +15,7 @@ export function ChoreCard({
   trailing,
   dimmed,
   completeVariant = 'icon',
+  highlighted = false,
 }: {
   chore: Chore
   location?: Location | null
@@ -24,6 +25,7 @@ export function ChoreCard({
   trailing?: React.ReactNode
   dimmed?: boolean
   completeVariant?: 'icon' | 'pill'
+  highlighted?: boolean
 }) {
   const canComplete = !!onComplete
   const canUncomplete = !!onUncomplete
@@ -35,7 +37,11 @@ export function ChoreCard({
       animate={{ opacity: dimmed ? 0.6 : 1, y: 0, scale: 1 }}
       exit={{ opacity: 0, scale: 0.9 }}
       transition={{ type: 'spring', stiffness: 320, damping: 28 }}
-      className="group bg-white/90 backdrop-blur rounded-3xl shadow-[0_8px_30px_rgba(124,58,237,0.08)] border border-white p-4 flex items-center gap-4"
+      className={`group bg-white/90 backdrop-blur rounded-3xl p-4 flex items-center gap-4 ${
+        highlighted
+          ? 'border-2 border-violet-300 shadow-[0_8px_30px_rgba(124,58,237,0.15)]'
+          : 'border border-white shadow-[0_8px_30px_rgba(124,58,237,0.08)]'
+      }`}
     >
       {/* Left action button */}
       {canComplete ? (

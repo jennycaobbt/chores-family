@@ -15,6 +15,7 @@ import {
   useUpsertPerson,
   uploadPersonPhoto,
   uploadIcon,
+  useDeleteAllCompletions,
 } from '../lib/queries'
 import { defaultPoints, formatFrequency } from '../lib/dueLogic'
 import { locationIcon } from '../lib/style'
@@ -833,6 +834,11 @@ function SettingsAdmin() {
   const [saved, setSaved] = useState(false)
   const [error, setError] = useState('')
 
+  // Clear data confirmation: 0 = idle, 1 = first confirm, 2 = second confirm
+  const [clearStep, setClearStep] = useState<0 | 1 | 2>(0)
+  const [cleared, setCleared] = useState(false)
+  const deleteAllCompletions = useDeleteAllCompletions()
+
   const handleTogglePin = () => {
     const next = !pinOn
     setPinEnabled(next)
@@ -856,8 +862,19 @@ function SettingsAdmin() {
     setTimeout(() => setSaved(false), 2500)
   }
 
+  const handleClearData = () => {
+    deleteAllCompletions.mutate(undefined, {
+      onSuccess: () => {
+        setClearStep(0)
+        setCleared(true)
+        setTimeout(() => setCleared(false), 3000)
+      },
+    })
+  }
+
   return (
     <div className="max-w-sm space-y-4">
+      {/* PIN Lock */}
       <div className="bg-white/85 rounded-2xl p-5 shadow-sm border border-white space-y-5">
         <div>
           <h3 className="font-extrabold text-lg text-gray-800 mb-0.5">PIN Lock</h3>
@@ -920,6 +937,72 @@ function SettingsAdmin() {
                 'Save new PIN'
               )}
             </button>
+          </div>
+        )}
+      </div>
+
+      {/* Danger Zone */}
+      <div className="bg-white/85 rounded-2xl p-5 shadow-sm border border-rose-100 space-y-4">
+        <div>
+          <h3 className="font-extrabold text-lg text-rose-600 mb-0.5">Danger Zone</h3>
+          <p className="text-sm text-gray-500">
+            Irreversible actions. Be careful.
+          </p>
+        </div>
+
+        {cleared ? (
+          <div className="flex items-center gap-2 text-emerald-600 font-bold text-sm py-1">
+            <Check className="h-4 w-4" /> All completion data cleared.
+          </div>
+        ) : clearStep === 0 ? (
+          <button
+            onClick={() => setClearStep(1)}
+            className="w-full py-2.5 rounded-full font-bold text-sm border-2 border-rose-200 text-rose-500 hover:bg-rose-50 transition"
+          >
+            Clear all completion data
+          </button>
+        ) : clearStep === 1 ? (
+          <div className="space-y-3">
+            <div className="bg-rose-50 border border-rose-200 rounded-xl p-3 text-sm text-rose-700">
+              <p className="font-bold mb-0.5">Are you sure?</p>
+              <p>This will permanently delete all chore history and reset the leaderboard to zero.</p>
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setClearStep(0)}
+                className="flex-1 py-2 rounded-full font-bold text-sm text-gray-600 border border-gray-200 hover:bg-gray-50 transition"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => setClearStep(2)}
+                className="flex-1 py-2 rounded-full font-bold text-sm bg-rose-100 text-rose-600 hover:bg-rose-200 transition"
+              >
+                Yes, continue
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            <div className="bg-rose-100 border border-rose-300 rounded-xl p-3 text-sm text-rose-800">
+              <p className="font-extrabold mb-0.5">⚠️ Final warning</p>
+              <p>This <span className="font-bold">cannot be undone</span>. Every completion record will be deleted forever.</p>
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setClearStep(0)}
+                className="flex-1 py-2 rounded-full font-bold text-sm text-gray-600 border border-gray-200 hover:bg-gray-50 transition"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleClearData}
+                disabled={deleteAllCompletions.isPending}
+                className="flex-1 py-2 rounded-full font-bold text-sm bg-rose-500 text-white hover:bg-rose-600 disabled:opacity-60 transition"
+              >
+                {deleteAllCompletions.isPending ? 'Clearing…' : 'Delete everything'}
+              </button>
+            </div>
           </div>
         )}
       </div>

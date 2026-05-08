@@ -255,6 +255,17 @@ export function useDeleteChore() {
   })
 }
 
+export function useDeleteAllCompletions() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase.from('completions').delete().neq('id', '00000000-0000-0000-0000-000000000000')
+      if (error) throw error
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: KEY.completions }),
+  })
+}
+
 // Photo upload
 export async function uploadPersonPhoto(file: File): Promise<string> {
   const ext = file.name.split('.').pop() ?? 'jpg'

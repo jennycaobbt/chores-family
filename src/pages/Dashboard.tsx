@@ -151,6 +151,7 @@ export function Dashboard() {
                 defaultPerson={c.default_person_id ? peopleById[c.default_person_id] : null}
                 onComplete={() => setPicking(c)}
                 completeVariant="pill"
+                highlighted
               />
             ))}
           </AnimatePresence>
