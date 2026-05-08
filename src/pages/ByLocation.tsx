@@ -55,8 +55,6 @@ export function ByLocation() {
     return m
   }, [completions])
 
-  const now = useMemo(() => new Date(), [])
-
   const sortedLocations = useMemo(
     () => [...locations].sort((a, b) => a.sort_order - b.sort_order),
     [locations],
@@ -87,22 +85,23 @@ export function ByLocation() {
     return chores.filter((c) => c.location_id === effectiveId)
   }, [chores, effectiveId])
 
-  const due = useMemo(
-    () =>
-      filteredChores
-        .filter((c) => isDueNow(c, completionsByChore.get(c.id) ?? [], now))
-        .sort((a, b) => a.name.localeCompare(b.name)),
-    [filteredChores, completionsByChore, now],
-  )
+  // NOTE: new Date() called inside each memo — not a frozen value captured at mount.
+  // A frozen "now" causes completions made after mount to fail the `completed_at <= now`
+  // check in isDueNow/latestInPeriod, making the card appear stuck.
+  const due = useMemo(() => {
+    const now = new Date()
+    return filteredChores
+      .filter((c) => isDueNow(c, completionsByChore.get(c.id) ?? [], now))
+      .sort((a, b) => a.name.localeCompare(b.name))
+  }, [filteredChores, completionsByChore])
 
-  const done = useMemo(
-    () =>
-      filteredChores.filter((c) => {
-        if (isDueNow(c, completionsByChore.get(c.id) ?? [], now)) return false
-        return !!latestInPeriod(c, completionsByChore.get(c.id) ?? [], now)
-      }),
-    [filteredChores, completionsByChore, now],
-  )
+  const done = useMemo(() => {
+    const now = new Date()
+    return filteredChores.filter((c) => {
+      if (isDueNow(c, completionsByChore.get(c.id) ?? [], now)) return false
+      return !!latestInPeriod(c, completionsByChore.get(c.id) ?? [], now)
+    })
+  }, [filteredChores, completionsByChore])
 
   const selectedLocation =
     effectiveId !== 'unassigned' ? (locationsById[effectiveId] ?? null) : null
@@ -255,7 +254,7 @@ export function ByLocation() {
                           const periodComp = latestInPeriod(
                             c,
                             completionsByChore.get(c.id) ?? [],
-                            now,
+                            new Date(),
                           )
                           return (
                             <ChoreCard

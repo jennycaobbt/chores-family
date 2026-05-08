@@ -37,6 +37,7 @@ export function ByPerson() {
   const [selectedId, setSelectedId] = useState<string | 'unassigned' | null>(null)
   const [showDone, setShowDone] = useState(false)
   const [celebrating, setCelebrating] = useState(false)
+  // Completion returned by server — held until confetti finishes, then flushed to cache
   const [pendingCompletion, setPendingCompletion] = useState<Completion | null>(null)
 
   const peopleById = useMemo(() => Object.fromEntries(people.map((p) => [p.id, p])), [people])
@@ -54,14 +55,11 @@ export function ByPerson() {
     return m
   }, [completions])
 
-  const now = useMemo(() => new Date(), [])
-
   const sortedPeople = useMemo(
     () => [...people].sort((a, b) => a.sort_order - b.sort_order),
     [people],
   )
 
-  // Default to first person once data loads
   const effectiveId = selectedId ?? sortedPeople[0]?.id ?? 'unassigned'
 
   const unassignedCount = useMemo(
@@ -81,27 +79,29 @@ export function ByPerson() {
     return chores.filter((c) => c.default_person_id === effectiveId)
   }, [chores, effectiveId])
 
-  const due = useMemo(
-    () =>
-      filteredChores
-        .filter((c) => isDueNow(c, completionsByChore.get(c.id) ?? [], now))
-        .sort((a, b) => a.name.localeCompare(b.name)),
-    [filteredChores, completionsByChore, now],
-  )
+  // NOTE: new Date() is called inside each memo — not a frozen value captured at mount.
+  // A frozen "now" causes completions made after mount to fail the `completed_at <= now`
+  // check in isDueNow/latestInPeriod, making the card appear stuck.
+  const due = useMemo(() => {
+    const now = new Date()
+    return filteredChores
+      .filter((c) => isDueNow(c, completionsByChore.get(c.id) ?? [], now))
+      .sort((a, b) => a.name.localeCompare(b.name))
+  }, [filteredChores, completionsByChore])
 
-  const done = useMemo(
-    () =>
-      filteredChores.filter((c) => {
-        if (isDueNow(c, completionsByChore.get(c.id) ?? [], now)) return false
-        return !!latestInPeriod(c, completionsByChore.get(c.id) ?? [], now)
-      }),
-    [filteredChores, completionsByChore, now],
-  )
+  const done = useMemo(() => {
+    const now = new Date()
+    return filteredChores.filter((c) => {
+      if (isDueNow(c, completionsByChore.get(c.id) ?? [], now)) return false
+      return !!latestInPeriod(c, completionsByChore.get(c.id) ?? [], now)
+    })
+  }, [filteredChores, completionsByChore])
 
   const selectedPerson =
     effectiveId !== 'unassigned' ? (peopleById[effectiveId] ?? null) : null
 
-  // Called when confetti finishes — flush the pending completion into the cache
+  // When confetti finishes: push the pending completion into the React Query cache.
+  // completionsByChore recomputes → due/done recompute with fresh new Date() → card moves.
   const handleConfettiDone = useCallback(() => {
     setCelebrating(false)
     if (pendingCompletion) {
@@ -175,7 +175,6 @@ export function ByPerson() {
 
         {/* Main content */}
         <div className="flex-1 min-w-0">
-          {/* Person header */}
           <div className="flex items-center gap-3 mb-4">
             <Avatar person={selectedPerson} size="md" />
             <div>
@@ -188,7 +187,6 @@ export function ByPerson() {
             </div>
           </div>
 
-          {/* Chore list */}
           <div className="space-y-3">
             {due.length === 0 && done.length === 0 && (
               <div className="bg-white/80 backdrop-blur rounded-3xl p-10 text-center border border-white shadow-lg">
@@ -235,7 +233,7 @@ export function ByPerson() {
                           const periodComp = latestInPeriod(
                             c,
                             completionsByChore.get(c.id) ?? [],
-                            now,
+                            new Date(),
                           )
                           return (
                             <ChoreCard
