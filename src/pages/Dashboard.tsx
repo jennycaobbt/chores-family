@@ -42,8 +42,6 @@ export function Dashboard() {
   const [undoState, setUndoState] = useState<UndoState | null>(null)
   const [showDone, setShowDone] = useState(false)
   const [celebrating, setCelebrating] = useState(false)
-  // Completion returned by the server — held here until confetti finishes, then flushed to cache
-  const [pendingCompletion, setPendingCompletion] = useState<Completion | null>(null)
 
   const peopleById = useMemo(() => Object.fromEntries(people.map((p) => [p.id, p])), [people])
   const locationsById = useMemo(
@@ -108,15 +106,6 @@ export function Dashboard() {
     [completionsByChore, undoMut],
   )
 
-  // When confetti finishes: push the pending completion into the React Query cache.
-  // completionsByChore recomputes → due/done recompute with fresh new Date() → card moves.
-  const handleConfettiDone = useCallback(() => {
-    setCelebrating(false)
-    if (pendingCompletion) {
-      qc.setQueryData<Completion[]>(['completions'], (old = []) => [pendingCompletion, ...old])
-      setPendingCompletion(null)
-    }
-  }, [pendingCompletion, qc])
 
   return (
     <div className="max-w-3xl mx-auto px-4 pt-6 pb-8">
@@ -202,7 +191,7 @@ export function Dashboard() {
         </div>
       )}
 
-      <ConfettiBurst active={celebrating} onDone={handleConfettiDone} />
+      <ConfettiBurst active={celebrating} onDone={() => setCelebrating(false)} />
 
       <WhoDidItModal
         chore={picking}
@@ -216,14 +205,9 @@ export function Dashboard() {
               onSuccess: (completion) => {
                 setPicking(null)
                 setUndoState({ completionId: completion.id, choreName })
-                if (personId !== null) {
-                  // Hold completion until confetti finishes, then move the card
-                  setPendingCompletion(completion)
-                  setCelebrating(true)
-                } else {
-                  // "Other" — no confetti, move card immediately
-                  qc.setQueryData<Completion[]>(['completions'], (old = []) => [completion, ...old])
-                }
+                // Push completion into cache immediately — card moves and confetti fires together
+                qc.setQueryData<Completion[]>(['completions'], (old = []) => [completion, ...old])
+                if (personId !== null) setCelebrating(true)
               },
             },
           )
