@@ -42,12 +42,9 @@ export function ChoreCard({
         completeVariant === 'pill' ? (
           <button
             onClick={onComplete}
-            className="pop shrink-0 h-10 px-4 rounded-full flex items-center gap-1.5 font-bold text-sm bg-gradient-to-r from-emerald-400 to-teal-500 text-white shadow-md shadow-emerald-300/50 hover:shadow-lg hover:shadow-emerald-300/50 active:shadow-sm transition"
+            className="pop shrink-0 h-10 px-4 rounded-full flex items-center font-bold text-sm bg-gradient-to-r from-emerald-400 to-teal-500 text-white shadow-md shadow-emerald-300/50 hover:shadow-lg hover:shadow-emerald-300/50 active:shadow-sm transition"
             aria-label="Mark complete"
           >
-            <svg viewBox="0 0 24 24" className="h-4 w-4 shrink-0" fill="none" stroke="currentColor" strokeWidth="3.5">
-              <path d="M5 13l4 4L19 7" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
             Complete
           </button>
         ) : (
