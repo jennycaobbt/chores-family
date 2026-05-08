@@ -71,7 +71,6 @@ export function useCompletions() {
 // ---------- Mutations ----------
 
 export function useCompleteChore() {
-  const qc = useQueryClient()
   return useMutation({
     mutationFn: async (input: {
       choreId: string
