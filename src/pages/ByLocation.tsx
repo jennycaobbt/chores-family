@@ -4,6 +4,7 @@ import { ChevronDown, ChevronUp, PartyPopper } from 'lucide-react'
 import { ChoreCard } from '../components/ChoreCard'
 import { WhoDidItModal } from '../components/WhoDidItModal'
 import { IconDisplay } from '../components/IconDisplay'
+import { ConfettiBurst } from '../components/ConfettiBurst'
 import {
   useChores,
   useCompleteChore,
@@ -34,6 +35,7 @@ export function ByLocation() {
   const [picking, setPicking] = useState<Chore | null>(null)
   const [selectedId, setSelectedId] = useState<string | 'unassigned' | null>(null)
   const [showDone, setShowDone] = useState(false)
+  const [celebrating, setCelebrating] = useState(false)
 
   const peopleById = useMemo(() => Object.fromEntries(people.map((p) => [p.id, p])), [people])
   const locationsById = useMemo(
@@ -273,17 +275,22 @@ export function ByLocation() {
         </div>
       </div>
 
+      <ConfettiBurst active={celebrating} onDone={() => setCelebrating(false)} />
+
       <WhoDidItModal
         chore={picking}
         people={people}
         onPick={(personId) => {
           if (!picking) return
-          completeMut.mutate({
-            choreId: picking.id,
-            personId,
-            points: personId === null ? 0 : picking.points,
-          })
-          setTimeout(() => setPicking(null), 350)
+          completeMut.mutate(
+            { choreId: picking.id, personId, points: personId === null ? 0 : picking.points },
+            {
+              onSuccess: () => {
+                setPicking(null)
+                if (personId !== null) setCelebrating(true)
+              },
+            },
+          )
         }}
         onClose={() => setPicking(null)}
       />

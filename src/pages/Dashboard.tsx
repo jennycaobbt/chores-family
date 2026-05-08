@@ -4,6 +4,7 @@ import { Sparkles, PartyPopper, ChevronDown, ChevronUp } from 'lucide-react'
 import { ChoreCard } from '../components/ChoreCard'
 import { WhoDidItModal } from '../components/WhoDidItModal'
 import { UndoToast } from '../components/UndoToast'
+import { ConfettiBurst } from '../components/ConfettiBurst'
 import {
   useChores,
   useCompleteChore,
@@ -42,6 +43,7 @@ export function Dashboard() {
   const [picking, setPicking] = useState<Chore | null>(null)
   const [undoState, setUndoState] = useState<UndoState | null>(null)
   const [showDone, setShowDone] = useState(false)
+  const [celebrating, setCelebrating] = useState(false)
 
   const peopleById = useMemo(() => Object.fromEntries(people.map((p) => [p.id, p])), [people])
   const locationsById = useMemo(
@@ -197,6 +199,8 @@ export function Dashboard() {
       )}
 
       {/* Who did it modal */}
+      <ConfettiBurst active={celebrating} onDone={() => setCelebrating(false)} />
+
       <WhoDidItModal
         chore={picking}
         people={people}
@@ -207,11 +211,12 @@ export function Dashboard() {
             { choreId, personId, points: personId === null ? 0 : points },
             {
               onSuccess: (completion) => {
+                setPicking(null)
                 setUndoState({ completionId: completion.id, choreName })
+                if (personId !== null) setCelebrating(true)
               },
             },
           )
-          setTimeout(() => setPicking(null), 350)
         }}
         onClose={() => setPicking(null)}
       />

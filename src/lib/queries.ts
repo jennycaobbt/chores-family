@@ -90,7 +90,10 @@ export function useCompleteChore() {
       if (error) throw error
       return data
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: KEY.completions }),
+    onSuccess: (newCompletion) => {
+      // Update cache immediately so the card moves to "done" without a round-trip refetch
+      qc.setQueryData<Completion[]>(KEY.completions, (old = []) => [newCompletion, ...old])
+    },
   })
 }
 
@@ -101,7 +104,10 @@ export function useUndoCompletion() {
       const { error } = await supabase.from('completions').delete().eq('id', completionId)
       if (error) throw error
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: KEY.completions }),
+    onSuccess: (_, completionId) => {
+      // Remove from cache immediately so the card moves back to "due" without a round-trip refetch
+      qc.setQueryData<Completion[]>(KEY.completions, (old = []) => old.filter((c) => c.id !== completionId))
+    },
   })
 }
 
