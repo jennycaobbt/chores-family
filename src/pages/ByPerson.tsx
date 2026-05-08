@@ -64,6 +64,13 @@ export function ByPerson() {
     [chores],
   )
 
+  const sidebarItems = useMemo(() => [
+    ...sortedPeople.map((p) => ({ id: p.id, label: p.name, person: p as typeof p | null })),
+    ...(unassignedCount > 0
+      ? [{ id: 'unassigned' as const, label: 'Unassigned', person: null }]
+      : []),
+  ], [sortedPeople, unassignedCount])
+
   const filteredChores = useMemo(() => {
     if (effectiveId === 'unassigned') return chores.filter((c) => c.default_person_id === null)
     return chores.filter((c) => c.default_person_id === effectiveId)
@@ -89,150 +96,161 @@ export function ByPerson() {
   const selectedPerson =
     effectiveId !== 'unassigned' ? (peopleById[effectiveId] ?? null) : null
 
+  const SidebarButton = ({
+    id,
+    label,
+    person,
+    mobile,
+  }: {
+    id: string
+    label: string
+    person: (typeof sortedPeople)[0] | null
+    mobile?: boolean
+  }) => {
+    const isSelected = effectiveId === id
+    if (mobile) {
+      return (
+        <button
+          onClick={() => { setSelectedId(id); setShowDone(false) }}
+          className={`flex items-center gap-1.5 shrink-0 px-3 py-2 rounded-full text-sm font-bold transition ${
+            isSelected
+              ? 'bg-violet-600 text-white shadow-md shadow-violet-200'
+              : 'bg-white/60 text-gray-600 hover:bg-white'
+          }`}
+        >
+          <Avatar person={person} size="xs" />
+          <span>{label}</span>
+        </button>
+      )
+    }
+    return (
+      <button
+        onClick={() => { setSelectedId(id); setShowDone(false) }}
+        className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-bold text-left transition ${
+          isSelected
+            ? 'bg-violet-600 text-white shadow-md shadow-violet-200'
+            : 'text-gray-600 hover:bg-white/80'
+        }`}
+      >
+        <Avatar person={person} size="xs" />
+        <span className="truncate">{label}</span>
+      </button>
+    )
+  }
+
   return (
-    <div className="max-w-3xl mx-auto px-4 pt-6 pb-8">
+    <div className="max-w-4xl mx-auto px-4 pt-6 pb-8">
       <h2 className="text-3xl font-extrabold text-gray-800 mb-5">By Person</h2>
 
-      {/* Person selector */}
-      <div className="flex gap-2 overflow-x-auto pb-2 -mx-4 px-4 mb-6">
-        {sortedPeople.map((person) => {
-          const isSelected = effectiveId === person.id
-          return (
-            <button
-              key={person.id}
-              onClick={() => {
-                setSelectedId(person.id)
-                setShowDone(false)
-              }}
-              className={`flex flex-col items-center gap-1.5 shrink-0 px-3 pt-2.5 pb-2 rounded-2xl transition ${
-                isSelected
-                  ? 'bg-violet-100 ring-2 ring-violet-400'
-                  : 'bg-white/50 hover:bg-white/80'
-              }`}
-            >
-              <Avatar person={person} size="lg" />
-              <span
-                className={`text-xs font-bold whitespace-nowrap ${
-                  isSelected ? 'text-violet-700' : 'text-gray-600'
-                }`}
-              >
-                {person.name}
-              </span>
-            </button>
-          )
-        })}
-        {unassignedCount > 0 && (
-          <button
-            onClick={() => {
-              setSelectedId('unassigned')
-              setShowDone(false)
-            }}
-            className={`flex flex-col items-center gap-1.5 shrink-0 px-3 pt-2.5 pb-2 rounded-2xl transition ${
-              effectiveId === 'unassigned'
-                ? 'bg-violet-100 ring-2 ring-violet-400'
-                : 'bg-white/50 hover:bg-white/80'
-            }`}
-          >
-            <Avatar person={null} size="lg" />
-            <span
-              className={`text-xs font-bold whitespace-nowrap ${
-                effectiveId === 'unassigned' ? 'text-violet-700' : 'text-gray-600'
-              }`}
-            >
-              Unassigned
-            </span>
-          </button>
-        )}
+      {/* Mobile: horizontal person scroll */}
+      <div className="sm:hidden flex gap-2 overflow-x-auto pb-2 -mx-4 px-4 mb-5">
+        {sidebarItems.map((item) => (
+          <SidebarButton key={item.id} id={item.id} label={item.label} person={item.person} mobile />
+        ))}
       </div>
 
-      {/* Selected person header */}
-      <div className="flex items-center gap-3 mb-4">
-        <Avatar person={selectedPerson} size="md" />
-        <div>
-          <h3 className="font-extrabold text-xl text-gray-800">
-            {selectedPerson ? selectedPerson.name : 'Unassigned'}
-          </h3>
-          <p className="text-sm text-violet-500 font-semibold">
-            {due.length} due · {done.length} done this period
-          </p>
+      <div className="flex gap-6">
+        {/* Desktop sidebar */}
+        <div className="hidden sm:block w-44 shrink-0">
+          <div className="space-y-1 sticky top-24">
+            {sidebarItems.map((item) => (
+              <SidebarButton key={item.id} id={item.id} label={item.label} person={item.person} />
+            ))}
+          </div>
         </div>
-      </div>
 
-      {/* Chore list */}
-      <div className="space-y-3">
-        {due.length === 0 && done.length === 0 && (
-          <div className="bg-white/80 backdrop-blur rounded-3xl p-10 text-center border border-white shadow-lg">
-            <PartyPopper className="h-10 w-10 mx-auto text-amber-400 mb-3" />
-            <div className="font-extrabold text-lg text-gray-700">No chores assigned</div>
+        {/* Main content */}
+        <div className="flex-1 min-w-0">
+          {/* Person header */}
+          <div className="flex items-center gap-3 mb-4">
+            <Avatar person={selectedPerson} size="md" />
+            <div>
+              <h3 className="font-extrabold text-xl text-gray-800">
+                {selectedPerson ? selectedPerson.name : 'Unassigned'}
+              </h3>
+              <p className="text-sm text-violet-500 font-semibold">
+                {due.length} due · {done.length} done this period
+              </p>
+            </div>
           </div>
-        )}
 
-        {due.length === 0 && done.length > 0 && (
-          <div className="bg-emerald-50 border border-emerald-200 rounded-3xl p-5 text-center">
-            <PartyPopper className="h-7 w-7 mx-auto text-emerald-500 mb-1.5" />
-            <div className="font-extrabold text-sm text-emerald-700">All done for this period!</div>
-          </div>
-        )}
+          {/* Chore list */}
+          <div className="space-y-3">
+            {due.length === 0 && done.length === 0 && (
+              <div className="bg-white/80 backdrop-blur rounded-3xl p-10 text-center border border-white shadow-lg">
+                <PartyPopper className="h-10 w-10 mx-auto text-amber-400 mb-3" />
+                <div className="font-extrabold text-lg text-gray-700">No chores assigned</div>
+              </div>
+            )}
 
-        <AnimatePresence mode="popLayout">
-          {due.map((c) => (
-            <ChoreCard
-              key={c.id}
-              chore={c}
-              location={c.location_id ? locationsById[c.location_id] : null}
-              defaultPerson={c.default_person_id ? peopleById[c.default_person_id] : null}
-              onComplete={() => setPicking(c)}
-              completeVariant="pill"
-              highlighted
-            />
-          ))}
-        </AnimatePresence>
+            {due.length === 0 && done.length > 0 && (
+              <div className="bg-emerald-50 border border-emerald-200 rounded-3xl p-5 text-center">
+                <PartyPopper className="h-7 w-7 mx-auto text-emerald-500 mb-1.5" />
+                <div className="font-extrabold text-sm text-emerald-700">All done for this period!</div>
+              </div>
+            )}
 
-        {done.length > 0 && (
-          <div className="pt-1">
-            <button
-              onClick={() => setShowDone((v) => !v)}
-              className="flex items-center gap-2 text-sm font-bold text-gray-500 hover:text-gray-700 transition mb-2"
-            >
-              {showDone ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-              {done.length} completed this period
-            </button>
-            <AnimatePresence>
-              {showDone && (
-                <div className="space-y-2">
-                  <AnimatePresence mode="popLayout">
-                    {done.map((c) => {
-                      const periodComp = latestInPeriod(
-                        c,
-                        completionsByChore.get(c.id) ?? [],
-                        now,
-                      )
-                      return (
-                        <ChoreCard
-                          key={c.id}
-                          chore={c}
-                          location={c.location_id ? locationsById[c.location_id] : null}
-                          defaultPerson={
-                            c.default_person_id ? peopleById[c.default_person_id] : null
-                          }
-                          onUncomplete={
-                            periodComp ? () => undoMut.mutate(periodComp.id) : undefined
-                          }
-                          dimmed
-                          trailing={
-                            <span className="text-[10px] uppercase tracking-wider font-bold text-gray-400">
-                              Done
-                            </span>
-                          }
-                        />
-                      )
-                    })}
-                  </AnimatePresence>
-                </div>
-              )}
+            <AnimatePresence mode="popLayout">
+              {due.map((c) => (
+                <ChoreCard
+                  key={c.id}
+                  chore={c}
+                  location={c.location_id ? locationsById[c.location_id] : null}
+                  defaultPerson={c.default_person_id ? peopleById[c.default_person_id] : null}
+                  onComplete={() => setPicking(c)}
+                  completeVariant="pill"
+                  highlighted
+                />
+              ))}
             </AnimatePresence>
+
+            {done.length > 0 && (
+              <div className="pt-1">
+                <button
+                  onClick={() => setShowDone((v) => !v)}
+                  className="flex items-center gap-2 text-sm font-bold text-gray-500 hover:text-gray-700 transition mb-2"
+                >
+                  {showDone ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                  {done.length} completed this period
+                </button>
+                <AnimatePresence>
+                  {showDone && (
+                    <div className="space-y-2">
+                      <AnimatePresence mode="popLayout">
+                        {done.map((c) => {
+                          const periodComp = latestInPeriod(
+                            c,
+                            completionsByChore.get(c.id) ?? [],
+                            now,
+                          )
+                          return (
+                            <ChoreCard
+                              key={c.id}
+                              chore={c}
+                              location={c.location_id ? locationsById[c.location_id] : null}
+                              defaultPerson={
+                                c.default_person_id ? peopleById[c.default_person_id] : null
+                              }
+                              onUncomplete={
+                                periodComp ? () => undoMut.mutate(periodComp.id) : undefined
+                              }
+                              dimmed
+                              trailing={
+                                <span className="text-[10px] uppercase tracking-wider font-bold text-gray-400">
+                                  Done
+                                </span>
+                              }
+                            />
+                          )
+                        })}
+                      </AnimatePresence>
+                    </div>
+                  )}
+                </AnimatePresence>
+              </div>
+            )}
           </div>
-        )}
+        </div>
       </div>
 
       <WhoDidItModal
