@@ -84,16 +84,17 @@ export function currentPeriod(chore: Chore, at: Date = new Date()): { start: Dat
   }
 }
 
-/** Is this chore due in the current period (i.e. no completion in [start, now])? */
+/** Is this chore due in the current period (i.e. no completion in [start, end))? */
 export function isDueNow(
   chore: Chore,
   completionsForChore: Completion[],
   at: Date = new Date(),
 ): boolean {
-  const { start } = currentPeriod(chore, at)
-  return !completionsForChore.some(
-    (c) => new Date(c.completed_at) >= start && new Date(c.completed_at) <= at,
-  )
+  const { start, end } = currentPeriod(chore, at)
+  return !completionsForChore.some((c) => {
+    const ts = new Date(c.completed_at)
+    return ts >= start && ts < end
+  })
 }
 
 /** When does the chore's next period begin? (= end of current period) */

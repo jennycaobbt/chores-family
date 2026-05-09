@@ -16,9 +16,12 @@ import { isDueNow, currentPeriod } from '../lib/dueLogic'
 import type { Chore, Completion } from '../lib/database.types'
 
 function latestInPeriod(chore: Chore, completions: Completion[], now: Date): Completion | undefined {
-  const { start } = currentPeriod(chore, now)
+  const { start, end } = currentPeriod(chore, now)
   return completions
-    .filter((c) => new Date(c.completed_at) >= start && new Date(c.completed_at) <= now)
+    .filter((c) => {
+      const ts = new Date(c.completed_at)
+      return ts >= start && ts < end
+    })
     .sort((a, b) => new Date(b.completed_at).getTime() - new Date(a.completed_at).getTime())[0]
 }
 
@@ -49,8 +52,6 @@ export function ByPerson() {
     return m
   }, [completions])
 
-  const now = useMemo(() => new Date(), [])
-
   const sortedPeople = useMemo(
     () => [...people].sort((a, b) => a.sort_order - b.sort_order),
     [people],
@@ -77,20 +78,24 @@ export function ByPerson() {
   }, [chores, effectiveId])
 
   const due = useMemo(
-    () =>
-      filteredChores
+    () => {
+      const now = new Date()
+      return filteredChores
         .filter((c) => isDueNow(c, completionsByChore.get(c.id) ?? [], now))
-        .sort((a, b) => a.name.localeCompare(b.name)),
-    [filteredChores, completionsByChore, now],
+        .sort((a, b) => a.name.localeCompare(b.name))
+    },
+    [filteredChores, completionsByChore],
   )
 
   const done = useMemo(
-    () =>
-      filteredChores.filter((c) => {
+    () => {
+      const now = new Date()
+      return filteredChores.filter((c) => {
         if (isDueNow(c, completionsByChore.get(c.id) ?? [], now)) return false
         return !!latestInPeriod(c, completionsByChore.get(c.id) ?? [], now)
-      }),
-    [filteredChores, completionsByChore, now],
+      })
+    },
+    [filteredChores, completionsByChore],
   )
 
   const selectedPerson =
@@ -221,7 +226,7 @@ export function ByPerson() {
                           const periodComp = latestInPeriod(
                             c,
                             completionsByChore.get(c.id) ?? [],
-                            now,
+                            new Date(),
                           )
                           return (
                             <ChoreCard

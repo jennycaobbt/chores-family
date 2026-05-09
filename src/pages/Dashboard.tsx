@@ -25,9 +25,12 @@ function latestInPeriod(
   completions: Completion[],
   now: Date,
 ): Completion | undefined {
-  const { start } = currentPeriod(chore, now)
+  const { start, end } = currentPeriod(chore, now)
   return completions
-    .filter((c) => new Date(c.completed_at) >= start && new Date(c.completed_at) <= now)
+    .filter((c) => {
+      const ts = new Date(c.completed_at)
+      return ts >= start && ts < end
+    })
     .sort((a, b) => new Date(b.completed_at).getTime() - new Date(a.completed_at).getTime())[0]
 }
 
@@ -59,11 +62,10 @@ export function Dashboard() {
     return m
   }, [completions])
 
-  const now = useMemo(() => new Date(), [])
-
   const due = useMemo(
-    () =>
-      chores
+    () => {
+      const now = new Date()
+      return chores
         .filter((c) => isDueNow(c, completionsByChore.get(c.id) ?? [], now))
         .sort((a, b) => {
           const aHas = a.default_person_id ? 0 : 1
@@ -71,17 +73,20 @@ export function Dashboard() {
           if (aHas !== bHas) return aHas - bHas
           if (a.points !== b.points) return b.points - a.points
           return a.name.localeCompare(b.name)
-        }),
-    [chores, completionsByChore, now],
+        })
+    },
+    [chores, completionsByChore],
   )
 
   const doneThisPeriod = useMemo(
-    () =>
-      chores.filter((c) => {
+    () => {
+      const now = new Date()
+      return chores.filter((c) => {
         if (isDueNow(c, completionsByChore.get(c.id) ?? [], now)) return false
         return !!latestInPeriod(c, completionsByChore.get(c.id) ?? [], now)
-      }),
-    [chores, completionsByChore, now],
+      })
+    },
+    [chores, completionsByChore],
   )
 
   const todaysPoints = useMemo(() => {
@@ -101,12 +106,12 @@ export function Dashboard() {
 
   const handleUncomplete = useCallback(
     (chore: Chore) => {
-      const comp = latestInPeriod(chore, completionsByChore.get(chore.id) ?? [], now)
+      const comp = latestInPeriod(chore, completionsByChore.get(chore.id) ?? [], new Date())
       if (comp) {
         undoMut.mutate(comp.id)
       }
     },
-    [completionsByChore, now, undoMut],
+    [completionsByChore, undoMut],
   )
 
   return (
