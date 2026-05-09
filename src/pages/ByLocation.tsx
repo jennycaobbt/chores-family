@@ -1,7 +1,6 @@
 import { useMemo, useState } from 'react'
 import { AnimatePresence } from 'framer-motion'
 import { ChevronDown, ChevronUp, PartyPopper } from 'lucide-react'
-import { useQueryClient } from '@tanstack/react-query'
 import { ChoreCard } from '../components/ChoreCard'
 import { WhoDidItModal } from '../components/WhoDidItModal'
 import { IconDisplay } from '../components/IconDisplay'
@@ -26,7 +25,6 @@ function latestInPeriod(chore: Chore, completions: Completion[], now: Date): Com
 }
 
 export function ByLocation() {
-  const qc = useQueryClient()
   const { data: people = [] } = usePeople()
   const { data: locations = [] } = useLocations()
   const { data: chores = [] } = useChores()
@@ -286,9 +284,8 @@ export function ByLocation() {
           completeMut.mutate(
             { choreId: picking.id, personId, points: personId === null ? 0 : picking.points },
             {
-              onSuccess: (completion) => {
+              onSuccess: () => {
                 setPicking(null)
-                qc.setQueryData<Completion[]>(['completions'], (old = []) => [completion, ...old])
                 if (personId !== null) setCelebrating(true)
               },
             },

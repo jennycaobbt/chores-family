@@ -71,6 +71,7 @@ export function useCompletions() {
 // ---------- Mutations ----------
 
 export function useCompleteChore() {
+  const qc = useQueryClient()
   return useMutation({
     mutationFn: async (input: {
       choreId: string
@@ -89,8 +90,7 @@ export function useCompleteChore() {
       if (error) throw error
       return data
     },
-    // No cache side-effects here — each page decides when to commit the completion
-    // to the cache (after the confetti animation finishes) via setQueryData in onDone.
+    onSuccess: () => qc.invalidateQueries({ queryKey: KEY.completions }),
   })
 }
 

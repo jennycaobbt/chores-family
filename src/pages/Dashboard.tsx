@@ -1,7 +1,6 @@
 import { useMemo, useState, useCallback } from 'react'
 import { AnimatePresence } from 'framer-motion'
 import { Sparkles, PartyPopper, ChevronDown, ChevronUp } from 'lucide-react'
-import { useQueryClient } from '@tanstack/react-query'
 import { ChoreCard } from '../components/ChoreCard'
 import { WhoDidItModal } from '../components/WhoDidItModal'
 import { UndoToast } from '../components/UndoToast'
@@ -30,7 +29,6 @@ function latestInPeriod(chore: Chore, completions: Completion[], now: Date): Com
 }
 
 export function Dashboard() {
-  const qc = useQueryClient()
   const { data: people = [] } = usePeople()
   const { data: locations = [] } = useLocations()
   const { data: chores = [] } = useChores()
@@ -205,8 +203,6 @@ export function Dashboard() {
               onSuccess: (completion) => {
                 setPicking(null)
                 setUndoState({ completionId: completion.id, choreName })
-                // Push completion into cache immediately — card moves and confetti fires together
-                qc.setQueryData<Completion[]>(['completions'], (old = []) => [completion, ...old])
                 if (personId !== null) setCelebrating(true)
               },
             },
