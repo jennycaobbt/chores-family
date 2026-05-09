@@ -1,11 +1,10 @@
-import { useMemo, useState, useCallback } from 'react'
+import { useMemo, useState } from 'react'
 import { AnimatePresence } from 'framer-motion'
 import { ChevronDown, ChevronUp, PartyPopper } from 'lucide-react'
 import { useQueryClient } from '@tanstack/react-query'
 import { ChoreCard } from '../components/ChoreCard'
 import { WhoDidItModal } from '../components/WhoDidItModal'
 import { Avatar } from '../components/Avatar'
-import { ConfettiBurst } from '../components/ConfettiBurst'
 import {
   useChores,
   useCompleteChore,
@@ -36,9 +35,6 @@ export function ByPerson() {
   const [picking, setPicking] = useState<Chore | null>(null)
   const [selectedId, setSelectedId] = useState<string | 'unassigned' | null>(null)
   const [showDone, setShowDone] = useState(false)
-  const [celebrating, setCelebrating] = useState(false)
-  // Completion returned by server — held until confetti finishes, then flushed to cache
-  const [pendingCompletion, setPendingCompletion] = useState<Completion | null>(null)
 
   const peopleById = useMemo(() => Object.fromEntries(people.map((p) => [p.id, p])), [people])
   const locationsById = useMemo(
@@ -99,16 +95,6 @@ export function ByPerson() {
 
   const selectedPerson =
     effectiveId !== 'unassigned' ? (peopleById[effectiveId] ?? null) : null
-
-  // When confetti finishes: push the pending completion into the React Query cache.
-  // completionsByChore recomputes → due/done recompute with fresh new Date() → card moves.
-  const handleConfettiDone = useCallback(() => {
-    setCelebrating(false)
-    if (pendingCompletion) {
-      qc.setQueryData<Completion[]>(['completions'], (old = []) => [pendingCompletion, ...old])
-      setPendingCompletion(null)
-    }
-  }, [pendingCompletion, qc])
 
   const SidebarButton = ({
     id,
@@ -265,8 +251,6 @@ export function ByPerson() {
         </div>
       </div>
 
-      <ConfettiBurst active={celebrating} onDone={handleConfettiDone} />
-
       <WhoDidItModal
         chore={picking}
         people={people}
@@ -277,12 +261,9 @@ export function ByPerson() {
             {
               onSuccess: (completion) => {
                 setPicking(null)
-                if (personId !== null) {
-                  setPendingCompletion(completion)
-                  setCelebrating(true)
-                } else {
+                setTimeout(() => {
                   qc.setQueryData<Completion[]>(['completions'], (old = []) => [completion, ...old])
-                }
+                }, 0)
               },
             },
           )
