@@ -1,6 +1,7 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useCallback } from 'react'
 import { AnimatePresence } from 'framer-motion'
 import { ChevronDown, ChevronUp, PartyPopper } from 'lucide-react'
+import { useQueryClient } from '@tanstack/react-query'
 import { ChoreCard } from '../components/ChoreCard'
 import { WhoDidItModal } from '../components/WhoDidItModal'
 import { IconDisplay } from '../components/IconDisplay'
@@ -25,6 +26,7 @@ function latestInPeriod(chore: Chore, completions: Completion[], now: Date): Com
 }
 
 export function ByLocation() {
+  const qc = useQueryClient()
   const { data: people = [] } = usePeople()
   const { data: locations = [] } = useLocations()
   const { data: chores = [] } = useChores()
@@ -36,6 +38,7 @@ export function ByLocation() {
   const [selectedId, setSelectedId] = useState<string | 'unassigned' | null>(null)
   const [showDone, setShowDone] = useState(false)
   const [celebrating, setCelebrating] = useState(false)
+  const [pendingCompletion, setPendingCompletion] = useState<Completion | null>(null)
 
   const peopleById = useMemo(() => Object.fromEntries(people.map((p) => [p.id, p])), [people])
   const locationsById = useMemo(
@@ -102,6 +105,15 @@ export function ByLocation() {
 
   const selectedLocation =
     effectiveId !== 'unassigned' ? (locationsById[effectiveId] ?? null) : null
+
+  // Called when confetti finishes — flush the pending completion into the cache
+  const handleConfettiDone = useCallback(() => {
+    setCelebrating(false)
+    if (pendingCompletion) {
+      qc.setQueryData<Completion[]>(['completions'], (old = []) => [pendingCompletion, ...old])
+      setPendingCompletion(null)
+    }
+  }, [pendingCompletion, qc])
 
   const SidebarButton = ({
     id,
@@ -274,7 +286,7 @@ export function ByLocation() {
         </div>
       </div>
 
-      <ConfettiBurst active={celebrating} onDone={() => setCelebrating(false)} />
+      <ConfettiBurst active={celebrating} onDone={handleConfettiDone} />
 
       <WhoDidItModal
         chore={picking}
@@ -284,9 +296,14 @@ export function ByLocation() {
           completeMut.mutate(
             { choreId: picking.id, personId, points: personId === null ? 0 : picking.points },
             {
-              onSuccess: () => {
+              onSuccess: (completion) => {
                 setPicking(null)
-                if (personId !== null) setCelebrating(true)
+                if (personId !== null) {
+                  setPendingCompletion(completion)
+                  setCelebrating(true)
+                } else {
+                  qc.setQueryData<Completion[]>(['completions'], (old = []) => [completion, ...old])
+                }
               },
             },
           )
