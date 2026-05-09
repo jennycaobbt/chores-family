@@ -1,11 +1,9 @@
 import { useMemo, useState, useCallback } from 'react'
 import { AnimatePresence } from 'framer-motion'
 import { Sparkles, PartyPopper, ChevronDown, ChevronUp } from 'lucide-react'
-import { useQueryClient } from '@tanstack/react-query'
 import { ChoreCard } from '../components/ChoreCard'
 import { WhoDidItModal } from '../components/WhoDidItModal'
 import { UndoToast } from '../components/UndoToast'
-import { ConfettiBurst } from '../components/ConfettiBurst'
 import {
   useChores,
   useCompleteChore,
@@ -22,7 +20,11 @@ interface UndoState {
   choreName: string
 }
 
-function latestInPeriod(chore: Chore, completions: Completion[], now: Date): Completion | undefined {
+function latestInPeriod(
+  chore: Chore,
+  completions: Completion[],
+  now: Date,
+): Completion | undefined {
   const { start } = currentPeriod(chore, now)
   return completions
     .filter((c) => new Date(c.completed_at) >= start && new Date(c.completed_at) <= now)
@@ -30,7 +32,6 @@ function latestInPeriod(chore: Chore, completions: Completion[], now: Date): Com
 }
 
 export function Dashboard() {
-  const qc = useQueryClient()
   const { data: people = [] } = usePeople()
   const { data: locations = [] } = useLocations()
   const { data: chores = [] } = useChores()
@@ -41,9 +42,6 @@ export function Dashboard() {
   const [picking, setPicking] = useState<Chore | null>(null)
   const [undoState, setUndoState] = useState<UndoState | null>(null)
   const [showDone, setShowDone] = useState(false)
-  const [celebrating, setCelebrating] = useState(false)
-  // Completion returned by the server — held here until confetti finishes, then flushed to cache
-  const [pendingCompletion, setPendingCompletion] = useState<Completion | null>(null)
 
   const peopleById = useMemo(() => Object.fromEntries(people.map((p) => [p.id, p])), [people])
   const locationsById = useMemo(
@@ -61,29 +59,30 @@ export function Dashboard() {
     return m
   }, [completions])
 
-  // NOTE: use new Date() inside each memo — NOT a frozen useMemo(() => new Date(), []).
-  // A frozen "now" causes completions made after mount to be invisible to the filter
-  // (completed_at > frozen_now fails the <= check in isDueNow/latestInPeriod).
-  const due = useMemo(() => {
-    const now = new Date()
-    return chores
-      .filter((c) => isDueNow(c, completionsByChore.get(c.id) ?? [], now))
-      .sort((a, b) => {
-        const aHas = a.default_person_id ? 0 : 1
-        const bHas = b.default_person_id ? 0 : 1
-        if (aHas !== bHas) return aHas - bHas
-        if (a.points !== b.points) return b.points - a.points
-        return a.name.localeCompare(b.name)
-      })
-  }, [chores, completionsByChore])
+  const now = useMemo(() => new Date(), [])
 
-  const doneThisPeriod = useMemo(() => {
-    const now = new Date()
-    return chores.filter((c) => {
-      if (isDueNow(c, completionsByChore.get(c.id) ?? [], now)) return false
-      return !!latestInPeriod(c, completionsByChore.get(c.id) ?? [], now)
-    })
-  }, [chores, completionsByChore])
+  const due = useMemo(
+    () =>
+      chores
+        .filter((c) => isDueNow(c, completionsByChore.get(c.id) ?? [], now))
+        .sort((a, b) => {
+          const aHas = a.default_person_id ? 0 : 1
+          const bHas = b.default_person_id ? 0 : 1
+          if (aHas !== bHas) return aHas - bHas
+          if (a.points !== b.points) return b.points - a.points
+          return a.name.localeCompare(b.name)
+        }),
+    [chores, completionsByChore, now],
+  )
+
+  const doneThisPeriod = useMemo(
+    () =>
+      chores.filter((c) => {
+        if (isDueNow(c, completionsByChore.get(c.id) ?? [], now)) return false
+        return !!latestInPeriod(c, completionsByChore.get(c.id) ?? [], now)
+      }),
+    [chores, completionsByChore, now],
+  )
 
   const todaysPoints = useMemo(() => {
     const startOfToday = new Date()
@@ -102,21 +101,13 @@ export function Dashboard() {
 
   const handleUncomplete = useCallback(
     (chore: Chore) => {
-      const comp = latestInPeriod(chore, completionsByChore.get(chore.id) ?? [], new Date())
-      if (comp) undoMut.mutate(comp.id)
+      const comp = latestInPeriod(chore, completionsByChore.get(chore.id) ?? [], now)
+      if (comp) {
+        undoMut.mutate(comp.id)
+      }
     },
-    [completionsByChore, undoMut],
+    [completionsByChore, now, undoMut],
   )
-
-  // When confetti finishes: push the pending completion into the React Query cache.
-  // completionsByChore recomputes → due/done recompute with fresh new Date() → card moves.
-  const handleConfettiDone = useCallback(() => {
-    setCelebrating(false)
-    if (pendingCompletion) {
-      qc.setQueryData<Completion[]>(['completions'], (old = []) => [pendingCompletion, ...old])
-      setPendingCompletion(null)
-    }
-  }, [pendingCompletion, qc])
 
   return (
     <div className="max-w-3xl mx-auto px-4 pt-6 pb-8">
@@ -165,6 +156,7 @@ export function Dashboard() {
             ))}
           </AnimatePresence>
 
+          {/* Completed section */}
           {doneThisPeriod.length > 0 && (
             <div className="pt-2">
               <button
@@ -183,7 +175,9 @@ export function Dashboard() {
                           key={c.id}
                           chore={c}
                           location={c.location_id ? locationsById[c.location_id] : null}
-                          defaultPerson={c.default_person_id ? peopleById[c.default_person_id] : null}
+                          defaultPerson={
+                            c.default_person_id ? peopleById[c.default_person_id] : null
+                          }
                           onUncomplete={() => handleUncomplete(c)}
                           dimmed
                           trailing={
@@ -202,8 +196,7 @@ export function Dashboard() {
         </div>
       )}
 
-      <ConfettiBurst active={celebrating} onDone={handleConfettiDone} />
-
+      {/* Who did it modal */}
       <WhoDidItModal
         chore={picking}
         people={people}
@@ -214,23 +207,16 @@ export function Dashboard() {
             { choreId, personId, points: personId === null ? 0 : points },
             {
               onSuccess: (completion) => {
-                setPicking(null)
                 setUndoState({ completionId: completion.id, choreName })
-                if (personId !== null) {
-                  // Hold completion until confetti finishes, then move the card
-                  setPendingCompletion(completion)
-                  setCelebrating(true)
-                } else {
-                  // "Other" — no confetti, move card immediately
-                  qc.setQueryData<Completion[]>(['completions'], (old = []) => [completion, ...old])
-                }
               },
             },
           )
+          setTimeout(() => setPicking(null), 350)
         }}
         onClose={() => setPicking(null)}
       />
 
+      {/* Undo toast */}
       <AnimatePresence>
         {undoState && (
           <UndoToast
