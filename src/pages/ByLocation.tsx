@@ -1,10 +1,11 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useCallback } from 'react'
 import { AnimatePresence } from 'framer-motion'
 import { ChevronDown, ChevronUp, PartyPopper } from 'lucide-react'
 import { useQueryClient } from '@tanstack/react-query'
 import { ChoreCard } from '../components/ChoreCard'
 import { WhoDidItModal } from '../components/WhoDidItModal'
 import { IconDisplay } from '../components/IconDisplay'
+import { ConfettiBurst } from '../components/ConfettiBurst'
 import {
   useChores,
   useCompleteChore,
@@ -36,6 +37,8 @@ export function ByLocation() {
   const [picking, setPicking] = useState<Chore | null>(null)
   const [selectedId, setSelectedId] = useState<string | 'unassigned' | null>(null)
   const [showDone, setShowDone] = useState(false)
+  const [celebrating, setCelebrating] = useState(false)
+  const [pendingCompletion, setPendingCompletion] = useState<Completion | null>(null)
 
   const peopleById = useMemo(() => Object.fromEntries(people.map((p) => [p.id, p])), [people])
   const locationsById = useMemo(
@@ -102,6 +105,15 @@ export function ByLocation() {
 
   const selectedLocation =
     effectiveId !== 'unassigned' ? (locationsById[effectiveId] ?? null) : null
+
+  // Called when confetti finishes — flush the pending completion into the cache
+  const handleConfettiDone = useCallback(() => {
+    setCelebrating(false)
+    if (pendingCompletion) {
+      qc.setQueryData<Completion[]>(['completions'], (old = []) => [pendingCompletion, ...old])
+      setPendingCompletion(null)
+    }
+  }, [pendingCompletion, qc])
 
   const SidebarButton = ({
     id,
@@ -274,6 +286,8 @@ export function ByLocation() {
         </div>
       </div>
 
+      <ConfettiBurst active={celebrating} onDone={handleConfettiDone} />
+
       <WhoDidItModal
         chore={picking}
         people={people}
@@ -284,9 +298,12 @@ export function ByLocation() {
             {
               onSuccess: (completion) => {
                 setPicking(null)
-                setTimeout(() => {
+                if (personId !== null) {
+                  setPendingCompletion(completion)
+                  setCelebrating(true)
+                } else {
                   qc.setQueryData<Completion[]>(['completions'], (old = []) => [completion, ...old])
-                }, 0)
+                }
               },
             },
           )

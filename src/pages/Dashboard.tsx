@@ -5,6 +5,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import { ChoreCard } from '../components/ChoreCard'
 import { WhoDidItModal } from '../components/WhoDidItModal'
 import { UndoToast } from '../components/UndoToast'
+import { ConfettiBurst } from '../components/ConfettiBurst'
 import {
   useChores,
   useCompleteChore,
@@ -40,6 +41,9 @@ export function Dashboard() {
   const [picking, setPicking] = useState<Chore | null>(null)
   const [undoState, setUndoState] = useState<UndoState | null>(null)
   const [showDone, setShowDone] = useState(false)
+  const [celebrating, setCelebrating] = useState(false)
+  // Completion returned by the server — held here until confetti finishes, then flushed to cache
+  const [pendingCompletion, setPendingCompletion] = useState<Completion | null>(null)
 
   const peopleById = useMemo(() => Object.fromEntries(people.map((p) => [p.id, p])), [people])
   const locationsById = useMemo(
@@ -105,6 +109,15 @@ export function Dashboard() {
   )
 
   // When confetti finishes: push the pending completion into the React Query cache.
+  // completionsByChore recomputes → due/done recompute with fresh new Date() → card moves.
+  const handleConfettiDone = useCallback(() => {
+    setCelebrating(false)
+    if (pendingCompletion) {
+      qc.setQueryData<Completion[]>(['completions'], (old = []) => [pendingCompletion, ...old])
+      setPendingCompletion(null)
+    }
+  }, [pendingCompletion, qc])
+
   return (
     <div className="max-w-3xl mx-auto px-4 pt-6 pb-8">
       <div className="flex items-end justify-between mb-4">
@@ -189,6 +202,8 @@ export function Dashboard() {
         </div>
       )}
 
+      <ConfettiBurst active={celebrating} onDone={handleConfettiDone} />
+
       <WhoDidItModal
         chore={picking}
         people={people}
@@ -201,11 +216,14 @@ export function Dashboard() {
               onSuccess: (completion) => {
                 setPicking(null)
                 setUndoState({ completionId: completion.id, choreName })
-                // setTimeout defers setQueryData outside React's render batch so the
-                // cache update propagates correctly to useCompletions() observers
-                setTimeout(() => {
+                if (personId !== null) {
+                  // Hold completion until confetti finishes, then move the card
+                  setPendingCompletion(completion)
+                  setCelebrating(true)
+                } else {
+                  // "Other" — no confetti, move card immediately
                   qc.setQueryData<Completion[]>(['completions'], (old = []) => [completion, ...old])
-                }, 0)
+                }
               },
             },
           )
