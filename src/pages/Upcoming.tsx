@@ -40,6 +40,7 @@ export function Upcoming() {
   const upcoming = useMemo(() => {
     const now = new Date()
     return chores
+      .filter((c) => c.frequency_type !== 'as_needed')
       .filter((c) => !isDueNow(c, completionsByChore.get(c.id) ?? [], now))
       .map((c) => ({ chore: c, nextDue: nextDueAt(c, now) }))
       .sort((a, b) => a.nextDue.getTime() - b.nextDue.getTime())

@@ -487,7 +487,7 @@ function ChoreForm({
 
         <Field label="Frequency">
           <div className="flex gap-2 flex-wrap">
-            {(['daily', 'weekly', 'monthly', 'every_n_days', 'every_n_weeks'] as FrequencyType[]).map((f) => (
+            {(['daily', 'weekly', 'monthly', 'every_n_days', 'every_n_weeks', 'as_needed'] as FrequencyType[]).map((f) => (
               <button
                 key={f}
                 type="button"
@@ -496,7 +496,7 @@ function ChoreForm({
                   freq === f ? 'bg-violet-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                 }`}
               >
-                {f === 'daily' ? 'Daily' : f === 'weekly' ? 'Weekly' : f === 'monthly' ? 'Monthly' : f === 'every_n_days' ? 'Every N days' : 'Every N weeks'}
+                {f === 'daily' ? 'Daily' : f === 'weekly' ? 'Weekly' : f === 'monthly' ? 'Monthly' : f === 'every_n_days' ? 'Every N days' : f === 'every_n_weeks' ? 'Every N weeks' : 'As needed'}
               </button>
             ))}
           </div>

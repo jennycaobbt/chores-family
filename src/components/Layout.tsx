@@ -1,11 +1,12 @@
 import { NavLink, Outlet } from 'react-router-dom'
-import { Home, Users, MapPin, CalendarClock, Trophy, Settings } from 'lucide-react'
+import { Home, Users, MapPin, CalendarClock, Zap, Trophy, Settings } from 'lucide-react'
 
 const NAV = [
   { to: '/', label: 'Today', icon: Home },
   { to: '/by-person', label: 'People', icon: Users },
   { to: '/by-location', label: 'Rooms', icon: MapPin },
   { to: '/upcoming', label: 'Upcoming', icon: CalendarClock },
+  { to: '/as-needed', label: 'Anytime', icon: Zap },
   { to: '/leaderboard', label: 'Scores', icon: Trophy },
   { to: '/admin', label: 'Admin', icon: Settings },
 ] as const
@@ -49,7 +50,7 @@ export function Layout() {
         className="md:hidden fixed bottom-0 left-0 right-0 z-30 bg-white/90 backdrop-blur-md border-t border-white/60 px-2 py-1.5"
         style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 6px)' }}
       >
-        <div className="grid grid-cols-6 gap-1">
+        <div className="grid grid-cols-7 gap-1">
           {NAV.map((item) => {
             const Icon = item.icon
             return (

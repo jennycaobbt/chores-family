@@ -133,6 +133,7 @@ export type Database = {
         | "monthly"
         | "every_n_days"
         | "every_n_weeks"
+        | "as_needed"
     }
     CompositeTypes: { [_ in never]: never }
   }

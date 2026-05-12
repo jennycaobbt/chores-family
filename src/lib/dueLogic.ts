@@ -81,6 +81,10 @@ export function currentPeriod(chore: Chore, at: Date = new Date()): { start: Dat
       const end = new Date(start.getTime() + n * WEEK_MS)
       return { start, end }
     }
+    case 'as_needed': {
+      // As-needed chores have no fixed period; isDueNow short-circuits before reaching here.
+      return { start: new Date(0), end: new Date(8640000000000000) }
+    }
   }
 }
 
@@ -90,6 +94,8 @@ export function isDueNow(
   completionsForChore: Completion[],
   at: Date = new Date(),
 ): boolean {
+  // As-needed chores are never "due" — they live on their own page.
+  if (chore.frequency_type === 'as_needed') return false
   const { start, end } = currentPeriod(chore, at)
   return !completionsForChore.some((c) => {
     const ts = new Date(c.completed_at)
@@ -131,6 +137,8 @@ export function formatFrequency(type: FrequencyType, n: number | null): string {
       return `Every ${n} days`
     case 'every_n_weeks':
       return `Every ${n} weeks`
+    case 'as_needed':
+      return 'As needed'
   }
 }
 
@@ -154,5 +162,7 @@ export function defaultPoints(type: FrequencyType, n: number | null): number {
       if (n <= 2) return 4
       if (n <= 3) return 4
       return 5
+    case 'as_needed':
+      return 2
   }
 }

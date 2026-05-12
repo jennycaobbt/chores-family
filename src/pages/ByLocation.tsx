@@ -87,6 +87,7 @@ export function ByLocation() {
     () => {
       const now = new Date()
       return filteredChores
+        .filter((c) => c.frequency_type !== 'as_needed')
         .filter((c) => isDueNow(c, completionsByChore.get(c.id) ?? [], now))
         .sort((a, b) => a.name.localeCompare(b.name))
     },
@@ -97,6 +98,7 @@ export function ByLocation() {
     () => {
       const now = new Date()
       return filteredChores.filter((c) => {
+        if (c.frequency_type === 'as_needed') return false
         if (isDueNow(c, completionsByChore.get(c.id) ?? [], now)) return false
         return !!latestInPeriod(c, completionsByChore.get(c.id) ?? [], now)
       })

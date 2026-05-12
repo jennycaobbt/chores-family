@@ -66,6 +66,7 @@ export function Dashboard() {
     () => {
       const now = new Date()
       return chores
+        .filter((c) => c.frequency_type !== 'as_needed')
         .filter((c) => isDueNow(c, completionsByChore.get(c.id) ?? [], now))
         .sort((a, b) => {
           const aHas = a.default_person_id ? 0 : 1
@@ -82,6 +83,7 @@ export function Dashboard() {
     () => {
       const now = new Date()
       return chores.filter((c) => {
+        if (c.frequency_type === 'as_needed') return false
         if (isDueNow(c, completionsByChore.get(c.id) ?? [], now)) return false
         return !!latestInPeriod(c, completionsByChore.get(c.id) ?? [], now)
       })
