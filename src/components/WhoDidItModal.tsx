@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Sparkles } from 'lucide-react'
 import type { Chore, Person } from '../lib/database.types'
 import { Avatar } from './Avatar'
@@ -17,6 +17,13 @@ export function WhoDidItModal({
 }) {
   const [picked, setPicked] = useState<string | null>(null)
   const open = !!chore
+
+  // Reset selection each time the modal opens for a new chore.
+  // Without this, `picked` retains the previous person when the modal is
+  // closed via the 350ms timeout (which skips onClose → setPicked(null)).
+  useEffect(() => {
+    if (open) setPicked(null)
+  }, [open])
 
   return (
     <Modal
