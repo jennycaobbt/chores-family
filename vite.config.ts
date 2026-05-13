@@ -9,7 +9,7 @@ export default defineConfig({
     tailwindcss(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.svg'],
+      includeAssets: ['favicon.svg', 'pwa-192.png', 'pwa-512.png', 'pwa-192-maskable.png', 'pwa-512-maskable.png'],
       manifest: {
         name: 'Chores',
         short_name: 'Chores',
@@ -20,12 +20,13 @@ export default defineConfig({
         orientation: 'any',
         start_url: '/',
         icons: [
-          {
-            src: '/favicon.svg',
-            sizes: 'any',
-            type: 'image/svg+xml',
-            purpose: 'any maskable',
-          },
+          // PNG icons for Android / Chrome install prompt
+          { src: '/pwa-192.png',          sizes: '192x192', type: 'image/png', purpose: 'any' },
+          { src: '/pwa-512.png',          sizes: '512x512', type: 'image/png', purpose: 'any' },
+          { src: '/pwa-192-maskable.png', sizes: '192x192', type: 'image/png', purpose: 'maskable' },
+          { src: '/pwa-512-maskable.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
+          // SVG fallback for desktop browsers
+          { src: '/favicon.svg', sizes: 'any', type: 'image/svg+xml', purpose: 'any' },
         ],
       },
       workbox: {
