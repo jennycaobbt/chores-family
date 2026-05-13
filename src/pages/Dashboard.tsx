@@ -1,6 +1,7 @@
 import { useMemo, useState, useCallback } from 'react'
 import { AnimatePresence } from 'framer-motion'
 import { Sparkles, PartyPopper, ChevronDown, ChevronUp } from 'lucide-react'
+import { Avatar } from '../components/Avatar'
 import { ChoreCard } from '../components/ChoreCard'
 import { WhoDidItModal } from '../components/WhoDidItModal'
 import { UndoToast } from '../components/UndoToast'
@@ -91,14 +92,33 @@ export function Dashboard() {
     [chores, completionsByChore],
   )
 
-  const todaysPoints = useMemo(() => {
+  /** Points earned today, keyed by person_id (null / "Other" completions excluded) */
+  const todayPersonPts = useMemo(() => {
     const startOfToday = new Date()
     startOfToday.setHours(0, 0, 0, 0)
-    return completions.reduce(
-      (sum, c) => (new Date(c.completed_at) >= startOfToday ? sum + c.points_awarded : sum),
-      0,
-    )
+    const map = new Map<string, number>()
+    for (const c of completions) {
+      if (!c.person_id) continue
+      if (new Date(c.completed_at) < startOfToday) continue
+      map.set(c.person_id, (map.get(c.person_id) ?? 0) + c.points_awarded)
+    }
+    return map
   }, [completions])
+
+  /** Total points across all people today */
+  const todaysPoints = useMemo(
+    () => [...todayPersonPts.values()].reduce((s, v) => s + v, 0),
+    [todayPersonPts],
+  )
+
+  /** People who have scored today, sorted by points descending */
+  const personPointsList = useMemo(
+    () =>
+      [...people]
+        .filter((p) => (todayPersonPts.get(p.id) ?? 0) > 0)
+        .sort((a, b) => (todayPersonPts.get(b.id) ?? 0) - (todayPersonPts.get(a.id) ?? 0)),
+    [people, todayPersonPts],
+  )
 
   const handleUndo = useCallback(() => {
     if (!undoState) return
@@ -129,9 +149,34 @@ export function Dashboard() {
           </div>
           <h2 className="text-3xl font-extrabold text-gray-800">Today's chores</h2>
         </div>
-        <div className="bg-gradient-to-br from-amber-300 to-orange-400 text-white rounded-2xl px-3 py-2 font-bold flex items-center gap-1 shadow-lg shadow-orange-200">
-          <Sparkles className="h-4 w-4" />
-          {todaysPoints}
+        {/* Per-person points earned today */}
+        <div className="bg-gradient-to-br from-amber-300 to-orange-400 text-white rounded-2xl px-3 py-2 shadow-lg shadow-orange-200 min-w-[72px]">
+          {personPointsList.length === 0 ? (
+            // No one has scored yet — show a simple total
+            <div className="flex items-center gap-1 font-bold">
+              <Sparkles className="h-4 w-4" />
+              <span>{todaysPoints}</span>
+            </div>
+          ) : (
+            <div className="flex flex-col gap-1.5">
+              {personPointsList.map((p) => (
+                <div key={p.id} className="flex items-center gap-1.5">
+                  <Avatar person={p} size="xs" />
+                  <span className="text-xs font-bold truncate max-w-[60px]">{p.name}</span>
+                  <span className="ml-auto pl-1.5 flex items-center gap-0.5 font-extrabold text-sm shrink-0">
+                    <Sparkles className="h-3 w-3" />
+                    {todayPersonPts.get(p.id)}
+                  </span>
+                </div>
+              ))}
+              {personPointsList.length > 1 && (
+                <div className="flex items-center justify-end gap-0.5 border-t border-white/30 pt-1 text-xs font-extrabold">
+                  <Sparkles className="h-3 w-3" />
+                  <span>{todaysPoints}</span>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
 
