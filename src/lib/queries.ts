@@ -68,6 +68,24 @@ export function useCompletions() {
   })
 }
 
+export function useCompletionHistory() {
+  return useQuery({
+    queryKey: [...KEY.completions, 'history'] as const,
+    queryFn: async (): Promise<Completion[]> => {
+      const cutoff = new Date()
+      cutoff.setDate(cutoff.getDate() - 90)
+      const { data, error } = await supabase
+        .from('completions')
+        .select('*')
+        .gte('completed_at', cutoff.toISOString())
+        .order('completed_at', { ascending: false })
+      if (error) throw error
+      return data
+    },
+    staleTime: 30_000,
+  })
+}
+
 // ---------- Mutations ----------
 
 export function useCompleteChore() {

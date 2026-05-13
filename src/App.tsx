@@ -5,6 +5,7 @@ import { ByPerson } from './pages/ByPerson'
 import { ByLocation } from './pages/ByLocation'
 import { Upcoming } from './pages/Upcoming'
 import { AsNeeded } from './pages/AsNeeded'
+import { History } from './pages/History'
 import { Leaderboard } from './pages/Leaderboard'
 import { Admin } from './pages/Admin'
 import { PinGate } from './components/PinGate'
@@ -20,6 +21,7 @@ export default function App() {
             <Route path="/by-location" element={<ByLocation />} />
             <Route path="/upcoming" element={<Upcoming />} />
             <Route path="/as-needed" element={<AsNeeded />} />
+            <Route path="/history" element={<History />} />
             <Route path="/leaderboard" element={<Leaderboard />} />
             <Route path="/admin" element={<Admin />} />
           </Route>
