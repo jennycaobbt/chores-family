@@ -105,12 +105,6 @@ export function Dashboard() {
     return map
   }, [completions])
 
-  /** Total points across all people today */
-  const todaysPoints = useMemo(
-    () => [...todayPersonPts.values()].reduce((s, v) => s + v, 0),
-    [todayPersonPts],
-  )
-
   /** People who have scored today, sorted by points descending */
   const personPointsList = useMemo(
     () =>
@@ -149,33 +143,27 @@ export function Dashboard() {
           </div>
           <h2 className="text-3xl font-extrabold text-gray-800">Today's chores</h2>
         </div>
-        {/* Per-person points earned today */}
-        <div className="bg-gradient-to-br from-amber-300 to-orange-400 text-white rounded-2xl px-3 py-2 shadow-lg shadow-orange-200 min-w-[72px]">
+        {/* Per-person points earned today — one compact chip per person */}
+        <div className="flex items-center gap-1.5">
           {personPointsList.length === 0 ? (
-            // No one has scored yet — show a simple total
-            <div className="flex items-center gap-1 font-bold">
-              <Sparkles className="h-4 w-4" />
-              <span>{todaysPoints}</span>
+            <div className="flex items-center gap-1 bg-gradient-to-br from-amber-300 to-orange-400 text-white rounded-full px-3 py-1.5 font-bold shadow-md shadow-orange-200">
+              <Sparkles className="h-3.5 w-3.5" />
+              <span>0</span>
             </div>
           ) : (
-            <div className="flex flex-col gap-1.5">
-              {personPointsList.map((p) => (
-                <div key={p.id} className="flex items-center gap-1.5">
-                  <Avatar person={p} size="xs" />
-                  <span className="text-xs font-bold truncate max-w-[60px]">{p.name}</span>
-                  <span className="ml-auto pl-1.5 flex items-center gap-0.5 font-extrabold text-sm shrink-0">
-                    <Sparkles className="h-3 w-3" />
-                    {todayPersonPts.get(p.id)}
-                  </span>
-                </div>
-              ))}
-              {personPointsList.length > 1 && (
-                <div className="flex items-center justify-end gap-0.5 border-t border-white/30 pt-1 text-xs font-extrabold">
+            personPointsList.map((p) => (
+              <div
+                key={p.id}
+                className="flex items-center gap-1 bg-gradient-to-br from-amber-300 to-orange-400 text-white rounded-full pl-0.5 pr-2.5 py-0.5 shadow-md shadow-orange-200"
+                title={`${p.name}: ${todayPersonPts.get(p.id)} pts`}
+              >
+                <Avatar person={p} size="xs" ring={false} />
+                <span className="flex items-center gap-0.5 font-extrabold text-sm">
                   <Sparkles className="h-3 w-3" />
-                  <span>{todaysPoints}</span>
-                </div>
-              )}
-            </div>
+                  {todayPersonPts.get(p.id)}
+                </span>
+              </div>
+            ))
           )}
         </div>
       </div>
