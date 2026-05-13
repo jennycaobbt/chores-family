@@ -2,14 +2,9 @@ import { Fragment } from 'react'
 import { NavLink, Outlet } from 'react-router-dom'
 import { Home, Users, MapPin, Zap, CalendarClock, History, Trophy, Settings } from 'lucide-react'
 
-/**
- * Three visual groups:
- *  1. Do   — pages where chores are completed
- *  2. Info — read-only / review pages
- *  3. Admin
- */
 const NAV_GROUPS = [
   {
+    label: 'Chores',          // shown as a prefix on desktop + outline on mobile
     items: [
       { to: '/', label: 'Today', icon: Home },
       { to: '/by-person', label: 'People', icon: Users },
@@ -18,6 +13,7 @@ const NAV_GROUPS = [
     ],
   },
   {
+    label: null,
     items: [
       { to: '/upcoming', label: 'Upcoming', icon: CalendarClock },
       { to: '/history', label: 'History', icon: History },
@@ -25,11 +21,16 @@ const NAV_GROUPS = [
     ],
   },
   {
+    label: null,
     items: [
       { to: '/admin', label: 'Admin', icon: Settings },
     ],
   },
 ]
+
+// Total item count used to compute proportional flex-basis on mobile so
+// all tab icons remain equal-width despite the group wrapper divs.
+const TOTAL_ITEMS = NAV_GROUPS.reduce((s, g) => s + g.items.length, 0)
 
 export function Layout() {
   return (
@@ -41,13 +42,23 @@ export function Layout() {
             Chores
           </h1>
 
-          {/* Desktop nav — each group floats in its own pill container */}
+          {/* ── Desktop nav ─────────────────────────────────────────────────── */}
+          {/* Each group floats in its own pill. The "Chores" group shows its   */}
+          {/* label as a small prefix followed by a hairline divider.           */}
           <nav className="ml-auto hidden md:flex items-center gap-2">
             {NAV_GROUPS.map((group, gi) => (
               <div
                 key={gi}
                 className="flex items-center gap-0.5 bg-white/70 backdrop-blur rounded-full px-1 py-1 shadow-sm border border-white/60"
               >
+                {group.label && (
+                  <>
+                    <span className="pl-2 pr-1 text-[10px] font-extrabold uppercase tracking-widest text-violet-400 select-none whitespace-nowrap">
+                      {group.label}
+                    </span>
+                    <div className="w-px h-4 bg-violet-200 shrink-0 mr-0.5" aria-hidden />
+                  </>
+                )}
                 {group.items.map((item) => (
                   <NavLink
                     key={item.to}
@@ -74,42 +85,60 @@ export function Layout() {
         <Outlet />
       </main>
 
-      {/* Mobile/tablet bottom tab bar */}
+      {/* ── Mobile / tablet bottom tab bar ──────────────────────────────────── */}
+      {/* Groups share space proportional to item count (flex-basis = N/total)  */}
+      {/* so every icon gets exactly the same width. The "Chores" group gets a  */}
+      {/* subtle violet outline to distinguish it.                               */}
       <nav
         className="md:hidden fixed bottom-0 left-0 right-0 z-30 bg-white/90 backdrop-blur-md border-t border-white/60 px-2 py-1.5"
         style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 6px)' }}
       >
-        {/* flex so all items share equal width; thin dividers between groups */}
-        <div className="flex items-center">
+        <div className="flex items-stretch">
           {NAV_GROUPS.map((group, gi) => (
             <Fragment key={gi}>
-              {/* Group separator */}
               {gi > 0 && (
                 <div className="w-px self-stretch bg-gray-200 shrink-0 mx-0.5" aria-hidden />
               )}
 
-              {group.items.map((item) => {
-                const Icon = item.icon
-                return (
-                  <NavLink
-                    key={item.to}
-                    to={item.to}
-                    end={item.to === '/'}
-                    className={({ isActive }) =>
-                      `flex-1 flex flex-col items-center gap-0.5 py-1.5 rounded-2xl text-[10px] font-semibold transition min-w-0 ${
-                        isActive ? 'text-violet-600' : 'text-gray-400'
-                      }`
-                    }
-                  >
-                    {({ isActive }) => (
-                      <>
-                        <Icon className={`h-[18px] w-[18px] shrink-0 ${isActive ? 'scale-110' : ''} transition`} />
-                        <span className="truncate w-full text-center leading-tight">{item.label}</span>
-                      </>
-                    )}
-                  </NavLink>
-                )
-              })}
+              {/* Group wrapper — proportional width keeps all icons equal-sized */}
+              <div
+                className={`flex items-center ${
+                  group.label
+                    ? 'rounded-xl ring-1 ring-violet-200 bg-violet-50/60 px-0.5 py-0.5'
+                    : ''
+                }`}
+                style={{
+                  flexBasis: `${(group.items.length / TOTAL_ITEMS) * 100}%`,
+                  flexShrink: 0,
+                }}
+              >
+                {group.items.map((item) => {
+                  const Icon = item.icon
+                  return (
+                    <NavLink
+                      key={item.to}
+                      to={item.to}
+                      end={item.to === '/'}
+                      className={({ isActive }) =>
+                        `flex-1 flex flex-col items-center gap-0.5 py-1 rounded-lg text-[10px] font-semibold transition min-w-0 ${
+                          isActive ? 'text-violet-600' : 'text-gray-400'
+                        }`
+                      }
+                    >
+                      {({ isActive }) => (
+                        <>
+                          <Icon
+                            className={`h-[18px] w-[18px] shrink-0 ${isActive ? 'scale-110' : ''} transition`}
+                          />
+                          <span className="truncate w-full text-center leading-tight">
+                            {item.label}
+                          </span>
+                        </>
+                      )}
+                    </NavLink>
+                  )
+                })}
+              </div>
             </Fragment>
           ))}
         </div>
