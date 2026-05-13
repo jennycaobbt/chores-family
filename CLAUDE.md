@@ -42,6 +42,7 @@ Day rolls over at **4am** (not midnight). Each chore has a *current period* base
 - `weekly` → period is Sun 4am → next Sun 4am; shows due every day until completed
 - `monthly` → period is 1st of month 4am → 1st of next month 4am
 - `every_n_days` / `every_n_weeks` → rolling period from last completion (or chore creation if never completed)
+- `as_needed` → `isDueNow` **always returns `false`** (short-circuits before `currentPeriod`); these chores never appear in Dashboard / By Person / By Room / Upcoming
 
 ### Points defaults (`defaultPoints` in `dueLogic.ts`)
 
@@ -52,6 +53,7 @@ Day rolls over at **4am** (not midnight). Each chore has a *current period* base
 | monthly | 5 |
 | every_n_days | n × 1 |
 | every_n_weeks | n × 3 |
+| as_needed | 2 |
 
 Customizable per chore in Admin. "Reset to default" button recalculates.
 
@@ -62,6 +64,8 @@ All hooks live in `src/lib/queries.ts`. Mutations call `queryClient.invalidateQu
 ### Who did it?
 
 No login. Completions use a nullable `person_id` FK. The "Who did it?" modal (`WhoDidItModal.tsx`) appears after tapping Complete — anyone can claim any chore. An **Other** option marks the chore complete with 0 points and `person_id = null` (excluded from leaderboard).
+
+`WhoDidItModal` resets its internal `picked` state via `useEffect` whenever the modal opens (`if (open) setPicked(null)`). This is needed because parent pages close the modal with `setTimeout(() => setPicking(null), 350)`, bypassing `onClose`, so without the effect the previously picked person would persist on rapid re-opens.
 
 ### Completion / undo pattern
 
@@ -96,12 +100,38 @@ Each chore and location has an optional `icon: string | null` field. The value i
 - `completeVariant?: 'icon' | 'pill'` — `'icon'` shows the round checkmark button (By Person / By Room); `'pill'` shows a violet→indigo "Complete" text pill (Dashboard and filtered views)
 - `highlighted?: boolean` — adds a `border-violet-300` outline and deeper shadow (used on all due cards in filtered views)
 
+### As-needed chores
+
+Chores with `frequency_type === 'as_needed'` are excluded from Dashboard, By Person, By Room, and Upcoming via explicit `.filter((c) => c.frequency_type !== 'as_needed')` guards in each page's `due`/`done` useMemos. They appear only on the **Anytime** page (`/as-needed`), where:
+- All as-needed chores are listed alphabetically
+- Anyone can complete any of them any number of times for full points
+- After completion the card stays (no period lock-out); undo toast is shown for 5 seconds
+
+### Navigation groups (`Layout.tsx`)
+
+Nav is defined as `NAV_GROUPS` — an array of 3 group objects, each with `label: string | null` and `items`. A `TOTAL_ITEMS` constant (sum of all item counts across groups) drives proportional `flex-basis` on mobile so every tab icon occupies equal width regardless of group size.
+
+**Groups:**
+1. `label: 'Chores'` — Today, People, Rooms, Anytime (4 items)
+2. `label: null` — Upcoming, History, Scores (3 items)
+3. `label: null` — Admin (1 item)
+
+**Desktop**: each group is its own rounded-full pill (`bg-white/70 backdrop-blur rounded-full`). The "Chores" group shows its label as a small uppercase prefix + hairline divider before the links.
+
+**Mobile**: groups share `flex` row separated by hairline `w-px` dividers. Each group `<div>` gets `flexBasis: (items.length / TOTAL_ITEMS) * 100%` and `flexShrink: 0`. The "Chores" group has a violet outline (`ring-1 ring-violet-200 bg-violet-50/60 rounded-xl`).
+
+### Chore History page (`/history`)
+
+Displays the last 90 days of completions per person. Uses `useCompletionHistory` (server-side `.gte` filter), grouped by calendar day. Layout mirrors By Person: sticky sidebar (desktop) / horizontal pill scroll (mobile). Tabs include all people plus an "Other" tab if any `person_id = null` completions exist. `dayLabel()` helper produces "Today · May 12", "Yesterday · May 11", or "Monday, May 9". Each row shows chore icon, name, room (if any), time, and points.
+
 ### Page layouts
 
-- **Dashboard**: flat list of due chores, collapsible "N completed" section below
-- **By Person**: sticky sidebar (desktop) / horizontal pill scroll (mobile) to filter by person; same card style as Dashboard
-- **By Room**: sticky sidebar (desktop) / horizontal pill scroll (mobile) to filter by room; same card style as Dashboard
-- Both filtered pages default to the first item in the list on load
+- **Dashboard**: flat list of due chores, collapsible "N completed" section below; excludes `as_needed` chores
+- **By Person**: sticky sidebar (desktop) / horizontal pill scroll (mobile) to filter by person; excludes `as_needed` chores
+- **By Room**: sticky sidebar (desktop) / horizontal pill scroll (mobile) to filter by room; excludes `as_needed` chores
+- **Anytime**: lists all `as_needed` chores alphabetically; `completeVariant="pill"` + `highlighted`; repeatable
+- **History**: per-person completion log for last 90 days; same sidebar/pill layout as By Person
+- All filtered pages default to the first item in the list on load
 
 ### Photo uploads
 
@@ -124,26 +154,28 @@ RLS: open anon read/write (intentional for family use — no auth).
 src/
   lib/
     supabase.ts          Supabase client (typed)
-    database.types.ts    Generated DB types + convenience re-exports
-    dueLogic.ts          Period/due calculations, formatTimeUntil, defaultPoints
-    queries.ts           All React Query hooks and mutations (incl. useDeleteAllCompletions)
+    database.types.ts    Generated DB types + convenience re-exports; frequency_type enum includes 'as_needed'
+    dueLogic.ts          Period/due calculations, formatTimeUntil, defaultPoints; as_needed short-circuits isDueNow
+    queries.ts           All React Query hooks and mutations (incl. useDeleteAllCompletions, useCompletionHistory)
     style.ts             personColor(sortOrder), locationIcon(loc), LOCATION_EMOJI_MAP
   components/
     Avatar.tsx           Person photo/initial circle, sizes xs–xl
     ChoreCard.tsx        Animated chore card; supports 'icon'/'pill' complete variant + highlighted prop
     IconDisplay.tsx      Renders emoji string OR <img> depending on icon value
-    Layout.tsx           Sticky header + desktop nav + mobile bottom tab bar
+    Layout.tsx           Sticky header + grouped desktop nav pills + grouped mobile bottom tab bar (NAV_GROUPS)
     Modal.tsx            Backdrop + spring modal wrapper
     PinGate.tsx          PIN lock screen + localStorage/sessionStorage helpers
     UndoToast.tsx        5-second countdown toast with undo button shown after completing a chore
-    WhoDidItModal.tsx    Person picker after marking a chore done; includes "Other" (0 pts) option
+    WhoDidItModal.tsx    Person picker after marking a chore done; resets picked state on open via useEffect
   pages/
-    Dashboard.tsx        Today's due chores (4am rollover), undo toast, collapsible done section
-    ByPerson.tsx         Sidebar/pill filter by person; Dashboard-style cards
-    ByLocation.tsx       Sidebar/pill filter by room; Dashboard-style cards
-    Upcoming.tsx         Non-due chores sorted by next due date
+    Dashboard.tsx        Today's due chores (4am rollover), undo toast, collapsible done section; excludes as_needed
+    ByPerson.tsx         Sidebar/pill filter by person; excludes as_needed chores
+    ByLocation.tsx       Sidebar/pill filter by room; excludes as_needed chores
+    AsNeeded.tsx         Lists all as_needed chores; repeatable completions with WhoDidItModal + UndoToast
+    Upcoming.tsx         Non-due chores sorted by next due date; excludes as_needed
+    History.tsx          Per-person completion log (last 90 days); sidebar/pill layout; grouped by day
     Leaderboard.tsx      All-time/monthly/yearly with prev/next navigation; skips null person_id
-    Admin.tsx            CRUD for chores/people/locations + Settings (PIN, clear all data)
+    Admin.tsx            CRUD for chores/people/locations + Settings (PIN, clear all data); includes as_needed freq
 ```
 
 ## Admin panel
