@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { Sparkles } from 'lucide-react'
 import type { Chore, Person } from '../lib/database.types'
 import { Avatar } from './Avatar'
+import { ConfettiBurst } from './ConfettiBurst'
 import { Modal } from './Modal'
 
 export function WhoDidItModal({
@@ -16,16 +17,22 @@ export function WhoDidItModal({
   onClose: () => void
 }) {
   const [picked, setPicked] = useState<string | null>(null)
+  const [burst, setBurst] = useState(false)
   const open = !!chore
 
   // Reset selection each time the modal opens for a new chore.
   // Without this, `picked` retains the previous person when the modal is
   // closed via the 350ms timeout (which skips onClose → setPicked(null)).
   useEffect(() => {
-    if (open) setPicked(null)
+    if (open) {
+      setPicked(null)
+      setBurst(false)
+    }
   }, [open])
 
   return (
+    <>
+    <ConfettiBurst active={burst} onDone={() => setBurst(false)} />
     <Modal
       open={open}
       onClose={() => {
@@ -45,6 +52,7 @@ export function WhoDidItModal({
             key={p.id}
             onClick={() => {
               setPicked(p.id)
+              setBurst(true)
               onPick(p.id)
             }}
             disabled={picked !== null}
@@ -116,5 +124,6 @@ export function WhoDidItModal({
         )}
       </div>
     </Modal>
+    </>
   )
 }
