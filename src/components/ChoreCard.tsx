@@ -37,26 +37,32 @@ export function ChoreCard({
       animate={{ opacity: dimmed ? 0.6 : 1, y: 0, scale: 1 }}
       exit={{ opacity: 0, scale: 0.9 }}
       transition={{ type: 'spring', stiffness: 320, damping: 28 }}
+      // On mobile the whole card is the tap target; on desktop the explicit
+      // button handles it (and calls e.stopPropagation so this never double-fires).
+      onClick={canComplete ? onComplete : undefined}
       className={`group bg-white/90 backdrop-blur rounded-3xl p-4 flex items-center gap-4 ${
         highlighted
           ? 'border-2 border-violet-300 shadow-[0_8px_30px_rgba(124,58,237,0.15)]'
           : 'border border-white shadow-[0_8px_30px_rgba(124,58,237,0.08)]'
-      }`}
+      }${canComplete ? ' cursor-pointer select-none active:scale-[0.985] transition-transform' : ''}`}
     >
-      {/* Left action button */}
+      {/* ── Left action ──────────────────────────────────────────────────────── */}
       {canComplete ? (
+        // On mobile: button is hidden — the card itself is the tap target.
+        // On sm+: show the explicit button; it calls stopPropagation so the
+        // card-level onClick never fires a second time.
         completeVariant === 'pill' ? (
           <button
-            onClick={onComplete}
-            className="pop shrink-0 h-10 px-4 rounded-full flex items-center font-bold text-sm bg-gradient-to-r from-violet-500 to-indigo-500 text-white shadow-md shadow-violet-300/50 hover:shadow-lg hover:shadow-violet-300/50 active:shadow-sm transition"
+            onClick={(e) => { e.stopPropagation(); onComplete() }}
+            className="pop shrink-0 h-10 px-4 rounded-full hidden sm:flex items-center font-bold text-sm bg-gradient-to-r from-violet-500 to-indigo-500 text-white shadow-md shadow-violet-300/50 hover:shadow-lg hover:shadow-violet-300/50 active:shadow-sm transition"
             aria-label="Mark complete"
           >
             Complete
           </button>
         ) : (
           <button
-            onClick={onComplete}
-            className="pop relative h-14 w-14 rounded-full shrink-0 flex items-center justify-center font-bold transition bg-gradient-to-br from-emerald-400 to-teal-500 text-white shadow-lg shadow-emerald-300/40 hover:shadow-xl active:shadow-md"
+            onClick={(e) => { e.stopPropagation(); onComplete() }}
+            className="pop relative h-14 w-14 rounded-full shrink-0 hidden sm:flex items-center justify-center font-bold transition bg-gradient-to-br from-emerald-400 to-teal-500 text-white shadow-lg shadow-emerald-300/40 hover:shadow-xl active:shadow-md"
             aria-label="Mark complete"
           >
             <svg viewBox="0 0 24 24" className="h-7 w-7" fill="none" stroke="currentColor" strokeWidth="3.5">
@@ -65,33 +71,35 @@ export function ChoreCard({
           </button>
         )
       ) : canUncomplete ? (
+        // Undo button — always visible but compact on mobile
         <button
           onClick={onUncomplete}
-          className="pop group/undo relative h-14 w-14 rounded-full shrink-0 flex items-center justify-center font-bold transition bg-emerald-50 border-2 border-emerald-200 text-emerald-500 hover:bg-rose-50 hover:border-rose-200 hover:text-rose-500"
+          className="pop group/undo relative h-10 w-10 sm:h-14 sm:w-14 rounded-full shrink-0 flex items-center justify-center font-bold transition bg-emerald-50 border-2 border-emerald-200 text-emerald-500 hover:bg-rose-50 hover:border-rose-200 hover:text-rose-500"
           aria-label="Undo completion"
           title="Tap to undo"
         >
           {/* Checkmark fades out on hover, undo icon fades in */}
           <svg
             viewBox="0 0 24 24"
-            className="h-6 w-6 absolute transition-opacity duration-150 group-hover/undo:opacity-0"
+            className="h-5 w-5 absolute transition-opacity duration-150 group-hover/undo:opacity-0"
             fill="none"
             stroke="currentColor"
             strokeWidth="3"
           >
             <path d="M5 13l4 4L19 7" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
-          <RotateCcw className="h-5 w-5 absolute opacity-0 transition-opacity duration-150 group-hover/undo:opacity-100" />
+          <RotateCcw className="h-3.5 w-3.5 sm:h-5 sm:w-5 absolute opacity-0 transition-opacity duration-150 group-hover/undo:opacity-100" />
         </button>
       ) : (
-        <div className="relative h-14 w-14 rounded-full shrink-0 flex items-center justify-center bg-gray-100 text-gray-300">
+        // Non-interactive placeholder — hidden on mobile (no wasted space)
+        <div className="relative h-14 w-14 rounded-full shrink-0 hidden sm:flex items-center justify-center bg-gray-100 text-gray-300">
           <svg viewBox="0 0 24 24" className="h-7 w-7" fill="none" stroke="currentColor" strokeWidth="3.5">
             <path d="M5 13l4 4L19 7" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
         </div>
       )}
 
-      {/* Content */}
+      {/* ── Content ──────────────────────────────────────────────────────────── */}
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-1.5">
           {chore.icon && (
@@ -113,7 +121,7 @@ export function ChoreCard({
         </div>
       </div>
 
-      {/* Right side */}
+      {/* ── Right side ───────────────────────────────────────────────────────── */}
       <div className="flex items-center gap-3">
         <div className="flex flex-col items-end gap-1">
           <span className="inline-flex items-center gap-0.5 text-amber-600 font-extrabold text-sm">
