@@ -29,66 +29,101 @@ export function logicalMonthStart(at: Date = new Date()): Date {
   return new Date(dayStart.getFullYear(), dayStart.getMonth(), 1, 4, 0, 0, 0)
 }
 
-/** Period start for `every N days` chores, anchored to the chore's `anchor` date. */
-function periodStartEveryNDays(at: Date, anchor: Date, n: number): Date {
-  const dayStart = logicalDayStart(at)
-  const anchorStart = logicalDayStart(anchor)
-  const daysSince = Math.floor((dayStart.getTime() - anchorStart.getTime()) / DAY_MS)
-  const periodIndex = Math.floor(daysSince / n)
-  return new Date(anchorStart.getTime() + periodIndex * n * DAY_MS)
-}
-
-/** Period start for `every N weeks` chores, anchored to the chore's `anchor` date. */
-function periodStartEveryNWeeks(at: Date, anchor: Date, n: number): Date {
-  const weekStart = logicalWeekStart(at)
-  const anchorWeek = logicalWeekStart(anchor)
-  const weeksSince = Math.round((weekStart.getTime() - anchorWeek.getTime()) / WEEK_MS)
-  const periodIndex = Math.floor(weeksSince / n)
-  return new Date(anchorWeek.getTime() + periodIndex * n * WEEK_MS)
-}
+// ─── Rolling period helpers ───────────────────────────────────────────────────
+//
+// For all frequencies except `daily`, chores use a *rolling* period anchored
+// to the last completion rather than fixed calendar boundaries.
+//
+//   weekly      → last completion + 7 days
+//   monthly     → last completion + 1 calendar month  (e.g. May 15 → Jun 15)
+//   every_n_days  → last completion + n × 1 day
+//   every_n_weeks → last completion + n × 7 days
+//
+// This ensures a weekly chore done on Saturday is due again next Saturday
+// (not the very next Sunday), and a monthly chore done on the 29th is due
+// on the 29th of the following month (not the 1st, two days later).
 
 /**
- * Returns the [start, end) window of the current period for this chore,
- * relative to `at` (defaults to now). End is exclusive.
+ * Returns the timestamp at which `chore` becomes due again, rolling
+ * forward exactly one period from `from`.
  */
-export function currentPeriod(chore: Chore, at: Date = new Date()): { start: Date; end: Date } {
-  const anchor = new Date(chore.created_at)
+function nextDueFrom(chore: Chore, from: Date): Date {
   switch (chore.frequency_type) {
-    case 'daily': {
-      const start = logicalDayStart(at)
-      const end = new Date(start.getTime() + DAY_MS)
-      return { start, end }
-    }
-    case 'weekly': {
-      const start = logicalWeekStart(at)
-      const end = new Date(start.getTime() + WEEK_MS)
-      return { start, end }
-    }
+    case 'weekly':
+      return new Date(from.getTime() + WEEK_MS)
+    case 'every_n_weeks':
+      return new Date(from.getTime() + (chore.frequency_n ?? 1) * WEEK_MS)
+    case 'every_n_days':
+      return new Date(from.getTime() + (chore.frequency_n ?? 1) * DAY_MS)
     case 'monthly': {
-      const start = logicalMonthStart(at)
-      const end = new Date(start.getFullYear(), start.getMonth() + 1, 1, 4, 0, 0, 0)
-      return { start, end }
+      const d = new Date(from)
+      d.setMonth(d.getMonth() + 1)
+      return d
     }
-    case 'every_n_days': {
-      const n = chore.frequency_n ?? 1
-      const start = periodStartEveryNDays(at, anchor, n)
-      const end = new Date(start.getTime() + n * DAY_MS)
-      return { start, end }
-    }
-    case 'every_n_weeks': {
-      const n = chore.frequency_n ?? 1
-      const start = periodStartEveryNWeeks(at, anchor, n)
-      const end = new Date(start.getTime() + n * WEEK_MS)
-      return { start, end }
-    }
-    case 'as_needed': {
-      // As-needed chores have no fixed period; isDueNow short-circuits before reaching here.
-      return { start: new Date(0), end: new Date(8640000000000000) }
-    }
+    default:
+      return from // daily / as_needed handled elsewhere
   }
 }
 
-/** Is this chore due in the current period (i.e. no completion in [start, end))? */
+/** Finds the most recent completion timestamp (ms since epoch), or 0. */
+function latestMs(completions: Completion[]): number {
+  return completions.reduce((max, c) => Math.max(max, new Date(c.completed_at).getTime()), 0)
+}
+
+// ─── currentPeriod (daily only) ──────────────────────────────────────────────
+//
+// For `daily` chores the "period" is still the current calendar day
+// (4am → 4am).  All other frequencies use rolling logic in isDueNow /
+// nextDueAt / latestCompletionForUndo directly.
+
+/**
+ * Returns the [start, end) window of the current period for a DAILY chore.
+ * End is exclusive.  For non-daily chores this still works but the rolling
+ * helpers above are used instead.
+ */
+export function currentPeriod(chore: Chore, at: Date = new Date()): { start: Date; end: Date } {
+  switch (chore.frequency_type) {
+    case 'daily': {
+      const start = logicalDayStart(at)
+      return { start, end: new Date(start.getTime() + DAY_MS) }
+    }
+    // The cases below are kept for backward compatibility (e.g. latestInPeriod
+    // callers that have not yet been migrated).  They use calendar anchors and
+    // are NOT used for isDueNow / nextDueAt logic any more.
+    case 'weekly': {
+      const start = logicalWeekStart(at)
+      return { start, end: new Date(start.getTime() + WEEK_MS) }
+    }
+    case 'monthly': {
+      const start = logicalMonthStart(at)
+      return { start, end: new Date(start.getFullYear(), start.getMonth() + 1, 1, 4, 0, 0, 0) }
+    }
+    case 'every_n_days': {
+      const n = chore.frequency_n ?? 1
+      const anchor = logicalDayStart(new Date(chore.created_at))
+      const dayStart = logicalDayStart(at)
+      const daysSince = Math.floor((dayStart.getTime() - anchor.getTime()) / DAY_MS)
+      const idx = Math.floor(daysSince / n)
+      const start = new Date(anchor.getTime() + idx * n * DAY_MS)
+      return { start, end: new Date(start.getTime() + n * DAY_MS) }
+    }
+    case 'every_n_weeks': {
+      const n = chore.frequency_n ?? 1
+      const anchorWeek = logicalWeekStart(new Date(chore.created_at))
+      const curWeek = logicalWeekStart(at)
+      const weeksSince = Math.round((curWeek.getTime() - anchorWeek.getTime()) / WEEK_MS)
+      const idx = Math.floor(weeksSince / n)
+      const start = new Date(anchorWeek.getTime() + idx * n * WEEK_MS)
+      return { start, end: new Date(start.getTime() + n * WEEK_MS) }
+    }
+    case 'as_needed':
+      return { start: new Date(0), end: new Date(8640000000000000) }
+  }
+}
+
+// ─── isDueNow ─────────────────────────────────────────────────────────────────
+
+/** Is this chore due right now? */
 export function isDueNow(
   chore: Chore,
   completionsForChore: Completion[],
@@ -96,17 +131,88 @@ export function isDueNow(
 ): boolean {
   // As-needed chores are never "due" — they live on their own page.
   if (chore.frequency_type === 'as_needed') return false
-  const { start, end } = currentPeriod(chore, at)
-  return !completionsForChore.some((c) => {
-    const ts = new Date(c.completed_at)
-    return ts >= start && ts < end
-  })
+
+  // Daily: calendar-day check (a completion anywhere in today's 4am window).
+  if (chore.frequency_type === 'daily') {
+    const { start, end } = currentPeriod(chore, at)
+    return !completionsForChore.some((c) => {
+      const ts = new Date(c.completed_at)
+      return ts >= start && ts < end
+    })
+  }
+
+  // All other frequencies: rolling from last completion.
+  // A chore that has never been completed is always due.
+  if (completionsForChore.length === 0) return true
+
+  const lastTs = latestMs(completionsForChore)
+  return at.getTime() >= nextDueFrom(chore, new Date(lastTs)).getTime()
 }
 
-/** When does the chore's next period begin? (= end of current period) */
-export function nextDueAt(chore: Chore, at: Date = new Date()): Date {
-  return currentPeriod(chore, at).end
+// ─── nextDueAt ────────────────────────────────────────────────────────────────
+
+/**
+ * When does this chore next become due?
+ *
+ * For daily: end of the current calendar day (4am tomorrow).
+ * For rolling types: last completion + one period.
+ * If never completed, returns `at` (already due).
+ */
+export function nextDueAt(
+  chore: Chore,
+  completionsForChore: Completion[],
+  at: Date = new Date(),
+): Date {
+  if (chore.frequency_type === 'daily') {
+    return currentPeriod(chore, at).end
+  }
+  if (completionsForChore.length === 0) {
+    return at // already due, treat as due now
+  }
+  return nextDueFrom(chore, new Date(latestMs(completionsForChore)))
 }
+
+// ─── latestCompletionForUndo ─────────────────────────────────────────────────
+
+/**
+ * Returns the most recent completion that counts as "done this period"
+ * — the one that would be targeted by an undo action.
+ *
+ * – Daily: the most recent completion within today's 4am window.
+ * – Rolling types: the most recent completion overall, provided the
+ *   chore is not yet due again.  Returns undefined once the chore
+ *   becomes due again (nothing left to undo).
+ */
+export function latestCompletionForUndo(
+  chore: Chore,
+  completionsForChore: Completion[],
+  at: Date = new Date(),
+): Completion | undefined {
+  if (completionsForChore.length === 0) return undefined
+
+  if (chore.frequency_type === 'daily') {
+    const { start, end } = currentPeriod(chore, at)
+    return completionsForChore
+      .filter((c) => {
+        const ts = new Date(c.completed_at)
+        return ts >= start && ts < end
+      })
+      .sort((a, b) => new Date(b.completed_at).getTime() - new Date(a.completed_at).getTime())[0]
+  }
+
+  // Rolling types: most recent completion, but only if still within the period.
+  const sorted = [...completionsForChore].sort(
+    (a, b) => new Date(b.completed_at).getTime() - new Date(a.completed_at).getTime(),
+  )
+  const latest = sorted[0]
+  const nextDue = nextDueFrom(chore, new Date(latest.completed_at))
+  // If we're at or past the next due date, the chore is due again and
+  // there's nothing to undo from the last period.
+  if (at.getTime() >= nextDue.getTime()) return undefined
+  return latest
+}
+
+// ─── Formatting helpers ───────────────────────────────────────────────────────
 
 /** Format the time-until in a friendly way: "in 2 days", "tomorrow", "in 3 hrs". */
 export function formatTimeUntil(target: Date, now: Date = new Date()): string {

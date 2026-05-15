@@ -42,7 +42,7 @@ export function Upcoming() {
     return chores
       .filter((c) => c.frequency_type !== 'as_needed')
       .filter((c) => !isDueNow(c, completionsByChore.get(c.id) ?? [], now))
-      .map((c) => ({ chore: c, nextDue: nextDueAt(c, now) }))
+      .map((c) => ({ chore: c, nextDue: nextDueAt(c, completionsByChore.get(c.id) ?? [], now) }))
       .sort((a, b) => a.nextDue.getTime() - b.nextDue.getTime())
   }, [chores, completionsByChore])
 

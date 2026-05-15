@@ -13,7 +13,7 @@ import {
   useLocations,
   usePeople,
 } from '../lib/queries'
-import { isDueNow, currentPeriod } from '../lib/dueLogic'
+import { isDueNow, latestCompletionForUndo } from '../lib/dueLogic'
 import type { Chore, Completion } from '../lib/database.types'
 
 interface UndoState {
@@ -21,19 +21,6 @@ interface UndoState {
   choreName: string
 }
 
-function latestInPeriod(
-  chore: Chore,
-  completions: Completion[],
-  now: Date,
-): Completion | undefined {
-  const { start, end } = currentPeriod(chore, now)
-  return completions
-    .filter((c) => {
-      const ts = new Date(c.completed_at)
-      return ts >= start && ts < end
-    })
-    .sort((a, b) => new Date(b.completed_at).getTime() - new Date(a.completed_at).getTime())[0]
-}
 
 export function Dashboard() {
   const { data: people = [] } = usePeople()
@@ -86,7 +73,7 @@ export function Dashboard() {
       return chores.filter((c) => {
         if (c.frequency_type === 'as_needed') return false
         if (isDueNow(c, completionsByChore.get(c.id) ?? [], now)) return false
-        return !!latestInPeriod(c, completionsByChore.get(c.id) ?? [], now)
+        return !!latestCompletionForUndo(c, completionsByChore.get(c.id) ?? [], now)
       })
     },
     [chores, completionsByChore],
@@ -122,7 +109,7 @@ export function Dashboard() {
 
   const handleUncomplete = useCallback(
     (chore: Chore) => {
-      const comp = latestInPeriod(chore, completionsByChore.get(chore.id) ?? [], new Date())
+      const comp = latestCompletionForUndo(chore, completionsByChore.get(chore.id) ?? [], new Date())
       if (comp) {
         undoMut.mutate(comp.id)
       }

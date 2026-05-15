@@ -12,18 +12,9 @@ import {
   useLocations,
   usePeople,
 } from '../lib/queries'
-import { isDueNow, currentPeriod } from '../lib/dueLogic'
+import { isDueNow, latestCompletionForUndo } from '../lib/dueLogic'
 import type { Chore, Completion } from '../lib/database.types'
 
-function latestInPeriod(chore: Chore, completions: Completion[], now: Date): Completion | undefined {
-  const { start, end } = currentPeriod(chore, now)
-  return completions
-    .filter((c) => {
-      const ts = new Date(c.completed_at)
-      return ts >= start && ts < end
-    })
-    .sort((a, b) => new Date(b.completed_at).getTime() - new Date(a.completed_at).getTime())[0]
-}
 
 export function ByPerson() {
   const { data: people = [] } = usePeople()
@@ -94,7 +85,7 @@ export function ByPerson() {
       return filteredChores.filter((c) => {
         if (c.frequency_type === 'as_needed') return false
         if (isDueNow(c, completionsByChore.get(c.id) ?? [], now)) return false
-        return !!latestInPeriod(c, completionsByChore.get(c.id) ?? [], now)
+        return !!latestCompletionForUndo(c, completionsByChore.get(c.id) ?? [], now)
       })
     },
     [filteredChores, completionsByChore],
@@ -225,7 +216,7 @@ export function ByPerson() {
                     <div className="space-y-2">
                       <AnimatePresence mode="popLayout">
                         {done.map((c) => {
-                          const periodComp = latestInPeriod(
+                          const periodComp = latestCompletionForUndo(
                             c,
                             completionsByChore.get(c.id) ?? [],
                             new Date(),
