@@ -54,6 +54,10 @@ export function Admin() {
 // ─── Emoji presets ──────────────────────────────────────────────────────────
 
 const CHORE_EMOJIS = [
+  // Custom SVG icons
+  '/icons/air-flow.svg','/icons/oven.svg','/icons/shower.svg','/icons/baby.svg',
+  '/icons/mopping.svg','/icons/lawn-mowing.svg','/icons/toys.svg','/icons/desk.svg',
+  '/icons/dishwasher.svg','/icons/sweeping.svg','/icons/sink-mirror.svg',
   // Common chores (top row — quick picks)
   '🧹','🌀','🗑️','🧺','🍽️','💧','🛏️','🌿','🚽','🫧',
   // Cleaning tools
@@ -111,7 +115,7 @@ const LOCATION_EMOJIS = [
 // ─── Icon Picker ─────────────────────────────────────────────────────────────
 
 function isUrl(s: string) {
-  return s.startsWith('http') || s.startsWith('data:') || s.startsWith('blob:')
+  return s.startsWith('http') || s.startsWith('data:') || s.startsWith('blob:') || s.startsWith('/')
 }
 
 function IconPicker({
@@ -189,18 +193,18 @@ function IconPicker({
         </label>
       </div>
 
-      {/* Emoji grid */}
+      {/* Icon grid */}
       <div className="flex flex-wrap gap-1.5 p-2.5 bg-gray-50 rounded-xl border border-gray-100 max-h-44 overflow-y-auto">
         {presets.map((e) => (
           <button
             key={e}
             type="button"
             onClick={() => onChange(e)}
-            className={`text-xl w-9 h-9 rounded-lg hover:bg-violet-100 transition flex items-center justify-center ${
+            className={`w-9 h-9 rounded-lg hover:bg-violet-100 transition flex items-center justify-center overflow-hidden ${
               value === e ? 'bg-violet-200 ring-2 ring-violet-400' : ''
             }`}
           >
-            {e}
+            <IconDisplay icon={e} className="text-xl" />
           </button>
         ))}
       </div>
