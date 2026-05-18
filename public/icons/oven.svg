@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Oven: front view with control panel, door window, handle, and knobs -->
+
+  <!-- Main oven body -->
+  <rect x="64" y="100" width="384" height="352" rx="24"
+        fill="none" stroke="#7C3AED" stroke-width="28"/>
+
+  <!-- Control panel strip -->
+  <rect x="64" y="100" width="384" height="80" rx="24"
+        fill="#7C3AED" opacity="0.15"/>
+  <line x1="64" y1="180" x2="448" y2="180"
+        stroke="#7C3AED" stroke-width="20"/>
+
+  <!-- Knobs -->
+  <circle cx="150" cy="140" r="24" fill="#7C3AED"/>
+  <circle cx="150" cy="140" r="10" fill="white"/>
+  <circle cx="230" cy="140" r="24" fill="#7C3AED"/>
+  <circle cx="230" cy="140" r="10" fill="white"/>
+  <circle cx="310" cy="140" r="24" fill="#7C3AED"/>
+  <circle cx="310" cy="140" r="10" fill="white"/>
+  <circle cx="390" cy="140" r="24" fill="#7C3AED"/>
+  <circle cx="390" cy="140" r="10" fill="white"/>
+
+  <!-- Door handle -->
+  <rect x="140" y="194" width="232" height="24" rx="12" fill="#7C3AED"/>
+
+  <!-- Oven window -->
+  <rect x="104" y="234" width="304" height="194" rx="16"
+        fill="none" stroke="#7C3AED" stroke-width="22"/>
+
+  <!-- Inner window border (glass effect) -->
+  <rect x="122" y="252" width="268" height="158" rx="10"
+        fill="#7C3AED" opacity="0.08"/>
+
+  <!-- Heating element lines inside -->
+  <path d="M 150 310 L 300 310 L 300 330 L 150 330 L 150 350 L 330 350"
+        stroke="#7C3AED" stroke-width="14" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity="0.5"/>
+</svg>

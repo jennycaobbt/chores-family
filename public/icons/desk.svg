@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Desk with monitor on top -->
+
+  <!-- Monitor screen -->
+  <rect x="148" y="72" width="216" height="148" rx="16"
+        fill="#EDE9FE" stroke="#7C3AED" stroke-width="24"/>
+  <!-- Screen inner -->
+  <rect x="170" y="92" width="172" height="108" rx="8" fill="#7C3AED" opacity="0.15"/>
+  <!-- Monitor stand neck -->
+  <line x1="256" y1="220" x2="256" y2="248"
+        stroke="#7C3AED" stroke-width="22" stroke-linecap="round"/>
+  <!-- Monitor stand base -->
+  <line x1="208" y1="248" x2="304" y2="248"
+        stroke="#7C3AED" stroke-width="22" stroke-linecap="round"/>
+
+  <!-- Desk surface (thick horizontal plank) -->
+  <rect x="48" y="268" width="416" height="44" rx="14" fill="#7C3AED"/>
+
+  <!-- Left leg -->
+  <rect x="88" y="312" width="36" height="180" rx="14" fill="#7C3AED"/>
+
+  <!-- Right leg -->
+  <rect x="388" y="312" width="36" height="180" rx="14" fill="#7C3AED"/>
+
+  <!-- Drawer (on right side under desk) -->
+  <rect x="296" y="322" width="108" height="64" rx="10"
+        fill="none" stroke="#7C3AED" stroke-width="18"/>
+  <!-- Drawer handle -->
+  <line x1="334" y1="354" x2="366" y2="354"
+        stroke="#7C3AED" stroke-width="16" stroke-linecap="round"/>
+</svg>

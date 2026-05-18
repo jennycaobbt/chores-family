@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Dishwasher: front panel with control strip, door, and dishes visible inside -->
+
+  <!-- Main body -->
+  <rect x="72" y="56" width="368" height="416" rx="24"
+        fill="none" stroke="#7C3AED" stroke-width="28"/>
+
+  <!-- Control panel strip at top -->
+  <rect x="72" y="56" width="368" height="72" rx="24"
+        fill="#7C3AED" opacity="0.15"/>
+  <line x1="72" y1="128" x2="440" y2="128" stroke="#7C3AED" stroke-width="18"/>
+
+  <!-- Control buttons -->
+  <circle cx="160" cy="92" r="18" fill="#7C3AED" opacity="0.6"/>
+  <circle cx="220" cy="92" r="18" fill="#7C3AED" opacity="0.4"/>
+  <circle cx="280" cy="92" r="18" fill="#7C3AED" opacity="0.4"/>
+  <rect x="318" y="76" width="80" height="32" rx="10" fill="#7C3AED" opacity="0.3"/>
+
+  <!-- Door handle -->
+  <line x1="130" y1="154" x2="382" y2="154"
+        stroke="#7C3AED" stroke-width="26" stroke-linecap="round"/>
+
+  <!-- Inside: dish racks with plates -->
+  <!-- Rack wire (horizontal lines) -->
+  <line x1="108" y1="232" x2="404" y2="232" stroke="#7C3AED" stroke-width="10" opacity="0.4" stroke-linecap="round"/>
+  <line x1="108" y1="358" x2="404" y2="358" stroke="#7C3AED" stroke-width="10" opacity="0.4" stroke-linecap="round"/>
+
+  <!-- Top rack: 3 plates (circles) -->
+  <circle cx="170" cy="292" r="52" fill="none" stroke="#7C3AED" stroke-width="18"/>
+  <circle cx="170" cy="292" r="28" fill="none" stroke="#7C3AED" stroke-width="12" opacity="0.5"/>
+  <circle cx="290" cy="292" r="52" fill="none" stroke="#7C3AED" stroke-width="18"/>
+  <circle cx="290" cy="292" r="28" fill="none" stroke="#7C3AED" stroke-width="12" opacity="0.5"/>
+  <circle cx="400" cy="292" r="28" fill="none" stroke="#7C3AED" stroke-width="18"/>
+
+  <!-- Bottom rack: glasses/cups (small rectangles) -->
+  <rect x="122" y="374" width="44" height="52" rx="6" fill="none" stroke="#7C3AED" stroke-width="16"/>
+  <rect x="184" y="374" width="44" height="52" rx="6" fill="none" stroke="#7C3AED" stroke-width="16"/>
+  <rect x="246" y="374" width="44" height="52" rx="6" fill="none" stroke="#7C3AED" stroke-width="16"/>
+  <rect x="308" y="374" width="44" height="52" rx="6" fill="none" stroke="#7C3AED" stroke-width="16"/>
+  <rect x="370" y="374" width="44" height="52" rx="6" fill="none" stroke="#7C3AED" stroke-width="16"/>
+</svg>

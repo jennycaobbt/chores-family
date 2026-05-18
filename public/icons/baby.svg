@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Baby bottle -->
+
+  <!-- Nipple tip -->
+  <path d="M 226 56 Q 256 32 286 56 L 290 90 L 222 90 Z"
+        fill="#7C3AED" stroke="#7C3AED" stroke-width="8" stroke-linejoin="round"/>
+
+  <!-- Collar ring -->
+  <rect x="196" y="84" width="120" height="36" rx="18" fill="#7C3AED"/>
+
+  <!-- Bottle body (trapezoid → rectangle) -->
+  <path d="M 172 120 L 152 188 L 152 390 Q 152 432 196 432 L 316 432 Q 360 432 360 390 L 360 188 L 340 120 Z"
+        fill="none" stroke="#7C3AED" stroke-width="26" stroke-linejoin="round"/>
+
+  <!-- Measurement lines -->
+  <line x1="172" y1="240" x2="210" y2="240"
+        stroke="#7C3AED" stroke-width="16" stroke-linecap="round"/>
+  <line x1="163" y1="300" x2="205" y2="300"
+        stroke="#7C3AED" stroke-width="16" stroke-linecap="round"/>
+  <line x1="157" y1="360" x2="202" y2="360"
+        stroke="#7C3AED" stroke-width="16" stroke-linecap="round"/>
+
+  <!-- Milk fill level (light tint) -->
+  <path d="M 158 310 L 154 390 Q 154 428 196 428 L 316 428 Q 358 428 358 390 L 354 310 Z"
+        fill="#7C3AED" opacity="0.12"/>
+</svg>

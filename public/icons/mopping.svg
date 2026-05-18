@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Wet mop: handle at angle, flat mop head at bottom with fringe strings -->
+
+  <!-- Handle (diagonal, upper-right to lower-left) -->
+  <line x1="360" y1="48" x2="196" y2="370"
+        stroke="#7C3AED" stroke-width="28" stroke-linecap="round"/>
+
+  <!-- Mop head block (horizontal, at bottom of handle) -->
+  <rect x="80" y="362" width="200" height="52" rx="14" fill="#7C3AED"
+        transform="rotate(-8, 180, 388)"/>
+
+  <!-- Mop fringe strings hanging from head -->
+  <line x1="92"  y1="408" x2="84"  y2="468" stroke="#7C3AED" stroke-width="16" stroke-linecap="round" opacity="0.9"/>
+  <line x1="116" y1="414" x2="108" y2="474" stroke="#7C3AED" stroke-width="16" stroke-linecap="round" opacity="0.9"/>
+  <line x1="140" y1="418" x2="132" y2="478" stroke="#7C3AED" stroke-width="16" stroke-linecap="round" opacity="0.9"/>
+  <line x1="164" y1="420" x2="158" y2="480" stroke="#7C3AED" stroke-width="16" stroke-linecap="round" opacity="0.9"/>
+  <line x1="188" y1="420" x2="184" y2="480" stroke="#7C3AED" stroke-width="16" stroke-linecap="round" opacity="0.9"/>
+  <line x1="212" y1="418" x2="210" y2="478" stroke="#7C3AED" stroke-width="16" stroke-linecap="round" opacity="0.9"/>
+  <line x1="236" y1="412" x2="236" y2="472" stroke="#7C3AED" stroke-width="16" stroke-linecap="round" opacity="0.9"/>
+  <line x1="260" y1="404" x2="262" y2="462" stroke="#7C3AED" stroke-width="16" stroke-linecap="round" opacity="0.9"/>
+
+  <!-- Water splashes / wet floor indicator -->
+  <ellipse cx="320" cy="460" rx="52" ry="14" fill="#7C3AED" opacity="0.18"/>
+  <ellipse cx="400" cy="448" rx="36" ry="10" fill="#7C3AED" opacity="0.13"/>
+</svg>

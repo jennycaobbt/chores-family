@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Side-view push lawn mower -->
+
+  <!-- Handle bars (two angled lines going up-right) -->
+  <line x1="300" y1="210" x2="440" y2="80"
+        stroke="#7C3AED" stroke-width="26" stroke-linecap="round"/>
+  <line x1="340" y1="226" x2="464" y2="108"
+        stroke="#7C3AED" stroke-width="26" stroke-linecap="round"/>
+  <!-- Handle crossbar -->
+  <line x1="440" y1="80" x2="464" y2="108"
+        stroke="#7C3AED" stroke-width="26" stroke-linecap="round"/>
+
+  <!-- Mower deck body -->
+  <rect x="72" y="248" width="336" height="96" rx="20" fill="#7C3AED"/>
+
+  <!-- Engine bump on top -->
+  <rect x="172" y="200" width="136" height="60" rx="16" fill="#7C3AED"/>
+
+  <!-- Front wheel -->
+  <circle cx="136" cy="384" r="56" fill="none" stroke="#7C3AED" stroke-width="26"/>
+  <circle cx="136" cy="384" r="18" fill="#7C3AED"/>
+
+  <!-- Rear wheel (larger) -->
+  <circle cx="376" cy="384" r="68" fill="none" stroke="#7C3AED" stroke-width="26"/>
+  <circle cx="376" cy="384" r="20" fill="#7C3AED"/>
+
+  <!-- Grass blades (before mower) -->
+  <line x1="48"  y1="470" x2="48"  y2="428" stroke="#7C3AED" stroke-width="14" stroke-linecap="round" opacity="0.5"/>
+  <line x1="72"  y1="470" x2="68"  y2="418" stroke="#7C3AED" stroke-width="14" stroke-linecap="round" opacity="0.5"/>
+  <line x1="96"  y1="470" x2="90"  y2="432" stroke="#7C3AED" stroke-width="14" stroke-linecap="round" opacity="0.5"/>
+
+  <!-- Ground line -->
+  <line x1="32" y1="470" x2="480" y2="470"
+        stroke="#7C3AED" stroke-width="18" stroke-linecap="round" opacity="0.3"/>
+</svg>

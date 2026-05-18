@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Air flow: three wavy lines suggesting moving air, with small arrowhead at right end -->
+  <!-- Top wave -->
+  <path d="M 64 152 C 148 112, 204 192, 288 152 C 340 128, 380 108, 420 128"
+        stroke="#7C3AED" fill="none" stroke-width="32" stroke-linecap="round" stroke-linejoin="round"/>
+  <polyline points="398,102 422,128 396,150"
+        stroke="#7C3AED" fill="none" stroke-width="28" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- Middle wave (longer) -->
+  <path d="M 64 256 C 148 216, 204 296, 288 256 C 348 226, 390 210, 448 230"
+        stroke="#7C3AED" fill="none" stroke-width="32" stroke-linecap="round" stroke-linejoin="round"/>
+  <polyline points="424,206 450,230 426,252"
+        stroke="#7C3AED" fill="none" stroke-width="28" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- Bottom wave -->
+  <path d="M 64 360 C 148 320, 204 400, 288 360 C 340 336, 380 316, 420 336"
+        stroke="#7C3AED" fill="none" stroke-width="32" stroke-linecap="round" stroke-linejoin="round"/>
+  <polyline points="398,310 422,336 396,358"
+        stroke="#7C3AED" fill="none" stroke-width="28" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

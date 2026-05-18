@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Sink and mirror: mirror rectangle above, countertop + basin below -->
+
+  <!-- Mirror frame -->
+  <rect x="112" y="28" width="288" height="200" rx="20"
+        fill="#EDE9FE" stroke="#7C3AED" stroke-width="24"/>
+  <!-- Mirror reflection highlight (subtle diagonal) -->
+  <line x1="148" y1="54" x2="148" y2="164"
+        stroke="#7C3AED" stroke-width="10" stroke-linecap="round" opacity="0.25"/>
+  <line x1="178" y1="44" x2="178" y2="108"
+        stroke="#7C3AED" stroke-width="10" stroke-linecap="round" opacity="0.15"/>
+
+  <!-- Countertop -->
+  <rect x="40" y="272" width="432" height="36" rx="14" fill="#7C3AED"/>
+
+  <!-- Faucet (mounted on countertop) -->
+  <!-- Base -->
+  <rect x="234" y="252" width="44" height="28" rx="8" fill="#7C3AED" opacity="0.8"/>
+  <!-- Spout arm (horizontal then curves down) -->
+  <path d="M 256 252 L 256 220 Q 256 196 286 196 L 320 196"
+        stroke="#7C3AED" fill="none" stroke-width="22" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- Water drop from spout -->
+  <ellipse cx="320" cy="216" rx="9" ry="13" fill="#7C3AED" opacity="0.6"/>
+
+  <!-- Hot/cold handles -->
+  <circle cx="198" cy="256" r="16" fill="#7C3AED" opacity="0.7"/>
+  <circle cx="314" cy="256" r="16" fill="#7C3AED" opacity="0.7"/>
+
+  <!-- Sink basin -->
+  <path d="M 96 308 L 96 430 Q 96 472 140 472 L 372 472 Q 416 472 416 430 L 416 308 Z"
+        fill="none" stroke="#7C3AED" stroke-width="24" stroke-linejoin="round"/>
+
+  <!-- Drain -->
+  <circle cx="256" cy="444" r="22" fill="none" stroke="#7C3AED" stroke-width="16"/>
+  <line x1="256" y1="432" x2="256" y2="456" stroke="#7C3AED" stroke-width="10" stroke-linecap="round" opacity="0.6"/>
+  <line x1="244" y1="444" x2="268" y2="444" stroke="#7C3AED" stroke-width="10" stroke-linecap="round" opacity="0.6"/>
+</svg>

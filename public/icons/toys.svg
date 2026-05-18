@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Building blocks: 2 on bottom, 1 on top -->
+
+  <!-- Bottom-left block -->
+  <rect x="48" y="282" width="188" height="188" rx="20"
+        fill="#EDE9FE" stroke="#7C3AED" stroke-width="24"/>
+  <!-- Star on bottom-left block -->
+  <polygon points="142,318 153,350 188,350 160,370 170,402 142,382 114,402 124,370 96,350 131,350"
+           fill="#7C3AED" opacity="0.7"/>
+
+  <!-- Bottom-right block -->
+  <rect x="276" y="282" width="188" height="188" rx="20"
+        fill="#EDE9FE" stroke="#7C3AED" stroke-width="24"/>
+  <!-- Circle on bottom-right block -->
+  <circle cx="370" cy="376" r="52" fill="none" stroke="#7C3AED" stroke-width="20" opacity="0.7"/>
+  <circle cx="370" cy="376" r="20" fill="#7C3AED" opacity="0.5"/>
+
+  <!-- Top-center block -->
+  <rect x="162" y="64" width="188" height="188" rx="20"
+        fill="#EDE9FE" stroke="#7C3AED" stroke-width="24"/>
+  <!-- Triangle on top block -->
+  <polygon points="256,98 316,194 196,194"
+           fill="none" stroke="#7C3AED" stroke-width="20" stroke-linejoin="round" opacity="0.7"/>
+</svg>

@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Shower head with water drops -->
+
+  <!-- Pipe from wall (top-right) curving down to shower head -->
+  <path d="M 400 56 L 400 200 Q 400 240 360 240 L 240 240 Q 200 240 200 280 L 200 310"
+        stroke="#7C3AED" fill="none" stroke-width="28" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- Shower head (rounded rectangle, horizontal) -->
+  <rect x="130" y="304" width="140" height="52" rx="26" fill="#7C3AED"/>
+
+  <!-- Shower head holes (water outlets) -->
+  <circle cx="158" cy="330" r="6" fill="white"/>
+  <circle cx="186" cy="330" r="6" fill="white"/>
+  <circle cx="214" cy="330" r="6" fill="white"/>
+  <circle cx="242" cy="330" r="6" fill="white"/>
+
+  <!-- Water drops falling -->
+  <!-- Column 1 -->
+  <ellipse cx="152" cy="390" rx="9" ry="13" fill="#7C3AED" opacity="0.85"/>
+  <ellipse cx="152" cy="438" rx="9" ry="13" fill="#7C3AED" opacity="0.6"/>
+  <ellipse cx="152" cy="484" rx="9" ry="13" fill="#7C3AED" opacity="0.35"/>
+
+  <!-- Column 2 -->
+  <ellipse cx="186" cy="404" rx="9" ry="13" fill="#7C3AED" opacity="0.85"/>
+  <ellipse cx="186" cy="452" rx="9" ry="13" fill="#7C3AED" opacity="0.6"/>
+
+  <!-- Column 3 -->
+  <ellipse cx="220" cy="390" rx="9" ry="13" fill="#7C3AED" opacity="0.85"/>
+  <ellipse cx="220" cy="438" rx="9" ry="13" fill="#7C3AED" opacity="0.6"/>
+  <ellipse cx="220" cy="484" rx="9" ry="13" fill="#7C3AED" opacity="0.35"/>
+
+  <!-- Column 4 -->
+  <ellipse cx="254" cy="404" rx="9" ry="13" fill="#7C3AED" opacity="0.85"/>
+  <ellipse cx="254" cy="452" rx="9" ry="13" fill="#7C3AED" opacity="0.6"/>
+</svg>

@@ -10,7 +10,7 @@ export function IconDisplay({
   className?: string
 }) {
   if (!icon) return null
-  if (icon.startsWith('http') || icon.startsWith('data:') || icon.startsWith('blob:')) {
+  if (icon.startsWith('http') || icon.startsWith('data:') || icon.startsWith('blob:') || icon.startsWith('/')) {
     return (
       <img
         src={icon}
