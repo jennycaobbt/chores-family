@@ -6,6 +6,7 @@ import { IconDisplay } from '../components/IconDisplay'
 import { Modal } from '../components/Modal'
 import {
   useChores,
+  useLocations,
   usePeople,
   useTrades,
   useCreateTrade,
@@ -13,7 +14,7 @@ import {
   useDeclineTrade,
   useCancelTrade,
 } from '../lib/queries'
-import type { Chore, Person, Trade } from '../lib/database.types'
+import type { Chore, Location, Person, Trade } from '../lib/database.types'
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -97,10 +98,12 @@ function TradeSwapVisual({
 
 function ChoreRow({
   chore,
+  location,
   selected,
   onClick,
 }: {
   chore: Chore
+  location?: Location | null
   selected?: boolean
   onClick: () => void
 }) {
@@ -117,7 +120,12 @@ function ChoreRow({
       <div className="h-10 w-10 rounded-xl bg-white shadow-sm flex items-center justify-center text-xl shrink-0 overflow-hidden">
         {chore.icon ? <IconDisplay icon={chore.icon} /> : <span className="text-gray-300">?</span>}
       </div>
-      <span className="flex-1 font-bold text-gray-800 truncate">{chore.name}</span>
+      <div className="flex-1 min-w-0">
+        <div className="font-bold text-gray-800 truncate">{chore.name}</div>
+        {location && (
+          <div className="text-xs text-gray-400 font-medium truncate">{location.name}</div>
+        )}
+      </div>
       <span className="flex items-center gap-0.5 text-amber-600 font-semibold text-sm shrink-0">
         <Sparkles className="h-3.5 w-3.5" />{chore.points}
       </span>
@@ -295,6 +303,7 @@ type CreateStep = 'who' | 'my-chore' | 'their-chore' | 'confirm'
 
 export function Trade() {
   const { data: people = [] } = usePeople()
+  const { data: locations = [] } = useLocations()
   const { data: chores = [] } = useChores()
   const { data: trades = [] } = useTrades()
   const createMut = useCreateTrade()
@@ -322,6 +331,10 @@ export function Trade() {
   const choresById = useMemo(
     () => Object.fromEntries(chores.map((c) => [c.id, c])),
     [chores],
+  )
+  const locationsById = useMemo(
+    () => Object.fromEntries(locations.map((l) => [l.id, l])),
+    [locations],
   )
 
   // Split trades
@@ -535,6 +548,7 @@ export function Trade() {
                   <ChoreRow
                     key={c.id}
                     chore={c}
+                    location={c.location_id ? locationsById[c.location_id] : null}
                     selected={proposerChore?.id === c.id}
                     onClick={() => {
                       setProposerChore(c)
@@ -579,6 +593,7 @@ export function Trade() {
                         <ChoreRow
                           key={c.id}
                           chore={c}
+                          location={c.location_id ? locationsById[c.location_id] : null}
                           selected={targetChore?.id === c.id}
                           onClick={() => {
                             setTargetChore(c)
