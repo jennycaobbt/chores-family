@@ -1,6 +1,7 @@
-import { Fragment } from 'react'
+import { Fragment, useMemo } from 'react'
 import { NavLink, Outlet } from 'react-router-dom'
-import { Home, Users, MapPin, Zap, CalendarClock, History, Trophy, Settings } from 'lucide-react'
+import { Home, Users, MapPin, Zap, CalendarClock, History, Trophy, Settings, ArrowLeftRight } from 'lucide-react'
+import { useTrades } from '../lib/queries'
 
 const NAV_GROUPS = [
   {
@@ -17,6 +18,7 @@ const NAV_GROUPS = [
     items: [
       { to: '/upcoming', label: 'Upcoming', icon: CalendarClock },
       { to: '/history', label: 'History', icon: History },
+      { to: '/trade', label: 'Trade', icon: ArrowLeftRight },
       { to: '/leaderboard', label: 'Scores', icon: Trophy },
     ],
   },
@@ -33,6 +35,12 @@ const NAV_GROUPS = [
 const TOTAL_ITEMS = NAV_GROUPS.reduce((s, g) => s + g.items.length, 0)
 
 export function Layout() {
+  const { data: trades = [] } = useTrades()
+  const pendingTradeCount = useMemo(
+    () => trades.filter((t) => t.status === 'pending').length,
+    [trades],
+  )
+
   return (
     <div className="flex flex-col min-h-svh">
       <header className="sticky top-0 z-30 backdrop-blur-md bg-white/60 border-b border-white/40">
@@ -65,7 +73,7 @@ export function Layout() {
                     to={item.to}
                     end={item.to === '/'}
                     className={({ isActive }) =>
-                      `px-3 py-1.5 rounded-full text-sm font-semibold transition ${
+                      `relative px-3 py-1.5 rounded-full text-sm font-semibold transition ${
                         isActive
                           ? 'bg-violet-600 text-white shadow-md'
                           : 'text-violet-700 hover:bg-violet-100'
@@ -73,6 +81,11 @@ export function Layout() {
                     }
                   >
                     {item.label}
+                    {item.to === '/trade' && pendingTradeCount > 0 && (
+                      <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-rose-500 text-white text-[9px] font-extrabold flex items-center justify-center leading-none">
+                        {pendingTradeCount > 9 ? '9+' : pendingTradeCount}
+                      </span>
+                    )}
                   </NavLink>
                 ))}
               </div>
@@ -114,6 +127,7 @@ export function Layout() {
               >
                 {group.items.map((item) => {
                   const Icon = item.icon
+                  const hasBadge = item.to === '/trade' && pendingTradeCount > 0
                   return (
                     <NavLink
                       key={item.to}
@@ -127,9 +141,16 @@ export function Layout() {
                     >
                       {({ isActive }) => (
                         <>
-                          <Icon
-                            className={`h-[18px] w-[18px] shrink-0 ${isActive ? 'scale-110' : ''} transition`}
-                          />
+                          <div className="relative">
+                            <Icon
+                              className={`h-[18px] w-[18px] shrink-0 ${isActive ? 'scale-110' : ''} transition`}
+                            />
+                            {hasBadge && (
+                              <span className="absolute -top-1.5 -right-2 h-4 w-4 rounded-full bg-rose-500 text-white text-[9px] font-extrabold flex items-center justify-center leading-none">
+                                {pendingTradeCount > 9 ? '9+' : pendingTradeCount}
+                              </span>
+                            )}
+                          </div>
                           <span className="truncate w-full text-center leading-tight">
                             {item.label}
                           </span>

@@ -7,6 +7,7 @@ import { Upcoming } from './pages/Upcoming'
 import { AsNeeded } from './pages/AsNeeded'
 import { History } from './pages/History'
 import { Leaderboard } from './pages/Leaderboard'
+import { Trade } from './pages/Trade'
 import { Admin } from './pages/Admin'
 import { PinGate } from './components/PinGate'
 
@@ -23,6 +24,7 @@ export default function App() {
             <Route path="/as-needed" element={<AsNeeded />} />
             <Route path="/history" element={<History />} />
             <Route path="/leaderboard" element={<Leaderboard />} />
+            <Route path="/trade" element={<Trade />} />
             <Route path="/admin" element={<Admin />} />
           </Route>
         </Routes>

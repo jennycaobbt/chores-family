@@ -1,6 +1,7 @@
 import { useMemo, useState, useCallback } from 'react'
+import { Link } from 'react-router-dom'
 import { AnimatePresence } from 'framer-motion'
-import { Sparkles, PartyPopper, ChevronDown, ChevronUp } from 'lucide-react'
+import { Sparkles, PartyPopper, ChevronDown, ChevronUp, ArrowLeftRight, ChevronRight } from 'lucide-react'
 import { Avatar } from '../components/Avatar'
 import { ChoreCard } from '../components/ChoreCard'
 import { WhoDidItModal } from '../components/WhoDidItModal'
@@ -12,6 +13,7 @@ import {
   useCompletions,
   useLocations,
   usePeople,
+  useTrades,
 } from '../lib/queries'
 import { isDueNow, latestCompletionForUndo } from '../lib/dueLogic'
 import type { Chore, Completion } from '../lib/database.types'
@@ -27,8 +29,14 @@ export function Dashboard() {
   const { data: locations = [] } = useLocations()
   const { data: chores = [] } = useChores()
   const { data: completions = [] } = useCompletions()
+  const { data: trades = [] } = useTrades()
   const completeMut = useCompleteChore()
   const undoMut = useUndoCompletion()
+
+  const pendingTradeCount = useMemo(
+    () => trades.filter((t) => t.status === 'pending').length,
+    [trades],
+  )
 
   const [picking, setPicking] = useState<Chore | null>(null)
   const [undoState, setUndoState] = useState<UndoState | null>(null)
@@ -154,6 +162,20 @@ export function Dashboard() {
           )}
         </div>
       </div>
+
+      {/* Pending trade indicator */}
+      {pendingTradeCount > 0 && (
+        <Link
+          to="/trade"
+          className="flex items-center gap-2 bg-violet-50 border border-violet-200 rounded-2xl px-4 py-3 mb-4 text-sm font-semibold text-violet-700 hover:bg-violet-100 transition"
+        >
+          <ArrowLeftRight className="h-4 w-4 shrink-0" />
+          <span className="flex-1">
+            {pendingTradeCount} trade offer{pendingTradeCount !== 1 ? 's' : ''} waiting
+          </span>
+          <ChevronRight className="h-4 w-4 text-violet-400" />
+        </Link>
+      )}
 
       {due.length === 0 && doneThisPeriod.length === 0 ? (
         <div className="bg-white/80 backdrop-blur rounded-3xl p-10 text-center border border-white shadow-lg">

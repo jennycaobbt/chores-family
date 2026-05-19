@@ -1,12 +1,13 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase } from './supabase'
-import type { Chore, Completion, Location, Person } from './database.types'
+import type { Chore, Completion, Location, Person, Trade } from './database.types'
 
 const KEY = {
   people: ['people'] as const,
   locations: ['locations'] as const,
   chores: ['chores'] as const,
   completions: ['completions'] as const,
+  trades: ['trades'] as const,
 }
 
 export function usePeople() {
@@ -281,6 +282,118 @@ export function useDeleteAllCompletions() {
       if (error) throw error
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: KEY.completions }),
+  })
+}
+
+// Trades
+export function useTrades() {
+  return useQuery({
+    queryKey: KEY.trades,
+    queryFn: async (): Promise<Trade[]> => {
+      const { data, error } = await supabase
+        .from('trades')
+        .select('*')
+        .order('created_at', { ascending: false })
+      if (error) throw error
+      return data
+    },
+    staleTime: 15_000,
+  })
+}
+
+export function useCreateTrade() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async (input: {
+      proposer_id: string
+      proposer_chore_id: string
+      target_id: string
+      target_chore_id: string
+    }): Promise<Trade> => {
+      const { data, error } = await supabase
+        .from('trades')
+        .insert(input)
+        .select()
+        .single()
+      if (error) throw error
+      return data
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: KEY.trades }),
+  })
+}
+
+export function useAcceptTrade() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async (trade: Trade) => {
+      const now = new Date().toISOString()
+      // Swap the default_person_id on both chores
+      const [r1, r2] = await Promise.all([
+        supabase
+          .from('chores')
+          .update({ default_person_id: trade.target_id })
+          .eq('id', trade.proposer_chore_id),
+        supabase
+          .from('chores')
+          .update({ default_person_id: trade.proposer_id })
+          .eq('id', trade.target_chore_id),
+      ])
+      if (r1.error) throw r1.error
+      if (r2.error) throw r2.error
+
+      // Mark this trade accepted
+      const { error: e3 } = await supabase
+        .from('trades')
+        .update({ status: 'accepted', resolved_at: now })
+        .eq('id', trade.id)
+      if (e3) throw e3
+
+      // Auto-cancel other pending trades involving either chore
+      const { error: e4 } = await supabase
+        .from('trades')
+        .update({ status: 'cancelled', resolved_at: now })
+        .eq('status', 'pending')
+        .neq('id', trade.id)
+        .or(
+          `proposer_chore_id.eq.${trade.proposer_chore_id},` +
+          `proposer_chore_id.eq.${trade.target_chore_id},` +
+          `target_chore_id.eq.${trade.proposer_chore_id},` +
+          `target_chore_id.eq.${trade.target_chore_id}`,
+        )
+      if (e4) throw e4
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: KEY.trades })
+      qc.invalidateQueries({ queryKey: KEY.chores })
+    },
+  })
+}
+
+export function useDeclineTrade() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async (tradeId: string) => {
+      const { error } = await supabase
+        .from('trades')
+        .update({ status: 'declined', resolved_at: new Date().toISOString() })
+        .eq('id', tradeId)
+      if (error) throw error
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: KEY.trades }),
+  })
+}
+
+export function useCancelTrade() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async (tradeId: string) => {
+      const { error } = await supabase
+        .from('trades')
+        .update({ status: 'cancelled', resolved_at: new Date().toISOString() })
+        .eq('id', tradeId)
+      if (error) throw error
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: KEY.trades }),
   })
 }
 

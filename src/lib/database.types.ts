@@ -123,6 +123,39 @@ export type Database = {
         }
         Relationships: []
       }
+      trades: {
+        Row: {
+          id: string
+          proposer_id: string
+          proposer_chore_id: string
+          target_id: string
+          target_chore_id: string
+          status: 'pending' | 'accepted' | 'declined' | 'cancelled'
+          created_at: string
+          resolved_at: string | null
+        }
+        Insert: {
+          id?: string
+          proposer_id: string
+          proposer_chore_id: string
+          target_id: string
+          target_chore_id: string
+          status?: 'pending' | 'accepted' | 'declined' | 'cancelled'
+          created_at?: string
+          resolved_at?: string | null
+        }
+        Update: {
+          id?: string
+          proposer_id?: string
+          proposer_chore_id?: string
+          target_id?: string
+          target_chore_id?: string
+          status?: 'pending' | 'accepted' | 'declined' | 'cancelled'
+          created_at?: string
+          resolved_at?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: { [_ in never]: never }
     Functions: { [_ in never]: never }
@@ -143,4 +176,6 @@ export type Person = Database["public"]["Tables"]["people"]["Row"]
 export type Location = Database["public"]["Tables"]["locations"]["Row"]
 export type Chore = Database["public"]["Tables"]["chores"]["Row"]
 export type Completion = Database["public"]["Tables"]["completions"]["Row"]
+export type Trade = Database["public"]["Tables"]["trades"]["Row"]
+export type TradeStatus = Trade["status"]
 export type FrequencyType = Database["public"]["Enums"]["frequency_type"]
